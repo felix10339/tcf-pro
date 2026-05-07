@@ -1,0 +1,443 @@
+[
+  {
+    "id": 1,
+    "section": "comprehension-ecrite",
+    "niveau": "B1",
+    "texte": "Le gouvernement canadien a annoncé un nouveau programme d'immigration pour attirer des travailleurs qualifiés dans les secteurs en pénurie de main-d'œuvre, notamment la santé, la construction et l'informatique.",
+    "question": "Quel est l'objectif principal de ce programme ?",
+    "options": [
+      "Réduire le nombre d'immigrants au Canada",
+      "Attirer des travailleurs dans des secteurs qui manquent de personnel",
+      "Former des travailleurs canadiens",
+      "Augmenter les taxes sur l'immigration"
+    ],
+    "correct": 1,
+    "explication": "Le texte dit clairement que le programme vise à attirer des travailleurs qualifiés dans les secteurs en pénurie."
+  },
+  {
+    "id": 2,
+    "section": "comprehension-ecrite",
+    "niveau": "B2",
+    "texte": "Montréal est reconnue comme une ville bilingue où le français et l'anglais coexistent, bien que le français soit la langue officielle du Québec selon la Charte de la langue française.",
+    "question": "Quelle est la langue officielle du Québec selon le texte ?",
+    "options": [
+      "L'anglais",
+      "Le français",
+      "Les deux langues à égalité",
+      "Le créole"
+    ],
+    "correct": 1,
+    "explication": "Le texte précise explicitement que le français est la langue officielle du Québec."
+  },
+  {
+    "id": 3,
+    "section": "comprehension-ecrite",
+    "niveau": "B1",
+    "texte": "Au Canada, le système de santé est public et financé par les impôts. Chaque province gère son propre système, ce qui peut entraîner des différences de services selon les régions.",
+    "question": "Comment est financé le système de santé canadien ?",
+    "options": [
+      "Par les assurances privées",
+      "Par les impôts des citoyens",
+      "Par des dons internationaux",
+      "Par les entreprises pharmaceutiques"
+    ],
+    "correct": 1,
+    "explication": "Le texte indique clairement que le système de santé est financé par les impôts."
+  },
+  {
+    "id": 4,
+    "section": "comprehension-ecrite",
+    "niveau": "B2",
+    "texte": "Le système Entrée Express permet au Canada de sélectionner des immigrants qualifiés en fonction d'un score appelé CRS. Les candidats ayant les scores les plus élevés reçoivent une invitation à présenter une demande de résidence permanente.",
+    "question": "Qu'est-ce que le CRS dans le système Entrée Express ?",
+    "options": [
+      "Un visa temporaire",
+      "Un score utilisé pour sélectionner les immigrants",
+      "Un test de langue obligatoire",
+      "Un formulaire de demande d'emploi"
+    ],
+    "correct": 1,
+    "explication": "Le CRS (Comprehensive Ranking System) est le système de points utilisé pour classer les candidats dans Entrée Express."
+  },
+  {
+    "id": 5,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "La ville de Québec, fondée en 1608 par Samuel de Champlain, est la seule ville fortifiée en Amérique du Nord au nord du Mexique. Son Vieux-Québec est classé au patrimoine mondial de l'UNESCO depuis 1985.",
+    "question": "Depuis quelle année le Vieux-Québec est-il classé au patrimoine mondial de l'UNESCO ?",
+    "options": [
+      "1608",
+      "1945",
+      "1985",
+      "2000"
+    ],
+    "correct": 2,
+    "explication": "Le texte précise que le Vieux-Québec a été classé au patrimoine mondial de l'UNESCO en 1985."
+  },
+  {
+    "id": 6,
+    "section": "comprehension-ecrite",
+    "niveau": "B1",
+    "texte": "Pour s'installer au Québec, les immigrants doivent généralement obtenir un Certificat de Sélection du Québec (CSQ) avant de demander la résidence permanente au gouvernement fédéral canadien.",
+    "question": "Que faut-il obtenir avant de demander la résidence permanente au Québec ?",
+    "options": [
+      "Un passeport canadien",
+      "Un Certificat de Sélection du Québec",
+      "Un permis de travail temporaire",
+      "Un diplôme universitaire canadien"
+    ],
+    "correct": 1,
+    "explication": "Le CSQ (Certificat de Sélection du Québec) est l'étape provinciale obligatoire avant la résidence permanente fédérale."
+  },
+  {
+    "id": 7,
+    "section": "comprehension-ecrite",
+    "niveau": "B2",
+    "texte": "Les hivers canadiens sont rigoureux, surtout dans les provinces comme le Québec et l'Ontario. Les températures peuvent descendre à -30°C. Les habitants s'adaptent avec des vêtements chauds et des infrastructures comme les passages souterrains à Montréal.",
+    "question": "Comment les habitants de Montréal s'adaptent-ils aux hivers rigoureux selon le texte ?",
+    "options": [
+      "En quittant la ville en hiver",
+      "En portant des vêtements chauds et utilisant des passages souterrains",
+      "En chauffant les rues",
+      "En fermant les écoles pendant 3 mois"
+    ],
+    "correct": 1,
+    "explication": "Le texte mentionne deux adaptations : les vêtements chauds et les passages souterrains à Montréal."
+  },
+  {
+    "id": 8,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "La politique d'immigration canadienne repose sur trois piliers : la réunification familiale, la protection des réfugiés et l'immigration économique. Cette dernière catégorie représente environ 60% des admissions annuelles.",
+    "question": "Quelle catégorie d'immigration représente la plus grande part des admissions au Canada ?",
+    "options": [
+      "La réunification familiale",
+      "La protection des réfugiés",
+      "L'immigration économique",
+      "Les permis étudiants"
+    ],
+    "correct": 2,
+    "explication": "Le texte indique que l'immigration économique représente environ 60% des admissions annuelles, soit la plus grande part."
+  },
+  {
+    "id": 9,
+    "section": "comprehension-orale",
+    "niveau": "B1",
+    "texte": "Bonjour, je voudrais m'inscrire au cours de français. Est-ce qu'il reste des places disponibles pour le niveau débutant ?",
+    "question": "Que veut faire cette personne ?",
+    "options": [
+      "Acheter des fournitures scolaires",
+      "S'inscrire à un cours de français",
+      "Réserver une salle de classe",
+      "Contacter un professeur"
+    ],
+    "correct": 1,
+    "explication": "La personne dit clairement 'je voudrais m'inscrire au cours de français'.",
+    "audio_texte": "Bonjour, je voudrais m'inscrire au cours de français. Est-ce qu'il reste des places disponibles pour le niveau débutant ?"
+  },
+  {
+    "id": 10,
+    "section": "comprehension-orale",
+    "niveau": "B1",
+    "texte": "Attention mesdames et messieurs, le train à destination de Montréal partira dans cinq minutes du quai numéro trois. Veuillez vous assurer d'avoir votre billet avec vous.",
+    "question": "Depuis quel quai part le train pour Montréal ?",
+    "options": [
+      "Quai 1",
+      "Quai 2",
+      "Quai 3",
+      "Quai 5"
+    ],
+    "correct": 2,
+    "explication": "L'annonce précise 'quai numéro trois'.",
+    "audio_texte": "Attention mesdames et messieurs, le train à destination de Montréal partira dans cinq minutes du quai numéro trois. Veuillez vous assurer d'avoir votre billet avec vous."
+  },
+  {
+    "id": 11,
+    "section": "comprehension-orale",
+    "niveau": "B2",
+    "texte": "Bonjour, j'appelle pour confirmer mon rendez-vous de demain matin avec le docteur Tremblay. C'est de la part de Marie Dupont. Mon numéro de téléphone est le 514-234-5678.",
+    "question": "Quel est le motif de cet appel téléphonique ?",
+    "options": [
+      "Annuler un rendez-vous médical",
+      "Confirmer un rendez-vous médical",
+      "Prendre un nouveau rendez-vous",
+      "Demander les résultats d'une analyse"
+    ],
+    "correct": 1,
+    "explication": "La personne dit 'j'appelle pour confirmer mon rendez-vous', ce qui indique une confirmation et non une annulation.",
+    "audio_texte": "Bonjour, j'appelle pour confirmer mon rendez-vous de demain matin avec le docteur Tremblay. C'est de la part de Marie Dupont. Mon numéro de téléphone est le 514-234-5678."
+  },
+  {
+    "id": 12,
+    "section": "comprehension-orale",
+    "niveau": "B2",
+    "texte": "Bienvenue à la Banque Nationale. Nos horaires d'ouverture sont du lundi au vendredi de 9h à 17h, et le samedi de 10h à 14h. Pour toute urgence, vous pouvez appeler notre service 24h sur 24.",
+    "question": "Quels sont les horaires d'ouverture le samedi ?",
+    "options": [
+      "9h à 17h",
+      "10h à 14h",
+      "9h à 14h",
+      "La banque est fermée le samedi"
+    ],
+    "correct": 1,
+    "explication": "Le message précise que le samedi, la banque est ouverte de 10h à 14h.",
+    "audio_texte": "Bienvenue à la Banque Nationale. Nos horaires d'ouverture sont du lundi au vendredi de 9h à 17h, et le samedi de 10h à 14h. Pour toute urgence, vous pouvez appeler notre service 24h sur 24."
+  },
+  {
+    "id": 13,
+    "section": "comprehension-orale",
+    "niveau": "C1",
+    "texte": "Le gouvernement provincial annonce aujourd'hui la création de 5 000 nouveaux logements abordables dans la région métropolitaine de Montréal. Ce projet, d'une valeur de 2 milliards de dollars, vise à répondre à la crise du logement qui touche particulièrement les familles à faible revenu.",
+    "question": "Quel est le budget prévu pour ce projet de logements ?",
+    "options": [
+      "500 millions de dollars",
+      "1 milliard de dollars",
+      "2 milliards de dollars",
+      "5 milliards de dollars"
+    ],
+    "correct": 2,
+    "explication": "Le bulletin indique que le projet est 'd'une valeur de 2 milliards de dollars'.",
+    "audio_texte": "Le gouvernement provincial annonce aujourd'hui la création de 5 000 nouveaux logements abordables dans la région métropolitaine de Montréal. Ce projet, d'une valeur de 2 milliards de dollars, vise à répondre à la crise du logement qui touche particulièrement les familles à faible revenu."
+  },
+  {
+    "id": 14,
+    "section": "comprehension-orale",
+    "niveau": "B1",
+    "texte": "Excusez-moi, pourriez-vous m'indiquer comment aller à la bibliothèque municipale ? Je cherche la rue Saint-Denis mais je suis complètement perdu.",
+    "question": "Que cherche cette personne ?",
+    "options": [
+      "Un restaurant",
+      "La bibliothèque municipale",
+      "La mairie",
+      "Une pharmacie"
+    ],
+    "correct": 1,
+    "explication": "La personne dit explicitement 'comment aller à la bibliothèque municipale'.",
+    "audio_texte": "Excusez-moi, pourriez-vous m'indiquer comment aller à la bibliothèque municipale ? Je cherche la rue Saint-Denis mais je suis complètement perdu."
+  },
+  {
+    "id": 15,
+    "section": "comprehension-ecrite",
+    "niveau": "B1",
+    "texte": "Au Québec, le système de santé est géré par le ministère de la Santé et des Services sociaux. Tous les résidents québécois ont accès aux soins de santé gratuits grâce à l'assurance-maladie obligatoire. Les hôpitaux publics offrent des services d'urgence, de chirurgie et d'hospitalisation sans frais supplémentaires pour les patients.",
+    "question": "Qui est responsable de la gestion du système de santé au Québec?",
+    "options": [
+      "Les hôpitaux privés",
+      "Le ministère de la Santé et des Services sociaux",
+      "Les cliniques médicales locales",
+      "Les compagnies d'assurance privées"
+    ],
+    "correct": 1,
+    "explication": "Le texte indique clairement que le ministère de la Santé et des Services sociaux gère le système de santé au Québec. C'est l'organisme gouvernemental responsable de cette administration."
+  },
+  {
+    "id": 16,
+    "section": "comprehension-ecrite",
+    "niveau": "B1",
+    "texte": "Pour consulter un médecin de famille au Québec, il est nécessaire d'avoir une carte d'assurance-maladie valide. Les délais d'attente pour un rendez-vous varient selon les régions, mais ils peuvent atteindre plusieurs semaines. Les urgences médicales sont toujours traitées en priorité dans les hôpitaux.",
+    "question": "Quel document est obligatoire pour consulter un médecin de famille au Québec?",
+    "options": [
+      "Un passeport",
+      "Une carte d'assurance-maladie",
+      "Un permis de conduire",
+      "Une lettre du gouvernement"
+    ],
+    "correct": 1,
+    "explication": "Le texte mentionne explicitement qu'une carte d'assurance-maladie valide est nécessaire pour consulter un médecin de famille au Québec."
+  },
+  {
+    "id": 17,
+    "section": "comprehension-ecrite",
+    "niveau": "B1",
+    "texte": "Les cliniques sans rendez-vous se multiplient au Québec pour réduire les temps d'attente. Ces établissements offrent des consultations médicales pour les cas non urgents sans nécessiter une réservation préalable. Cependant, les patients doivent toujours présenter leur assurance-maladie à leur arrivée.",
+    "question": "Quel est l'avantage principal des cliniques sans rendez-vous au Québec?",
+    "options": [
+      "Elles offrent des médicaments gratuits",
+      "Elles réduisent les temps d'attente pour les cas non urgents",
+      "Elles ne demandent pas l'assurance-maladie",
+      "Elles effectuent toutes les chirurgies"
+    ],
+    "correct": 1,
+    "explication": "Le texte explique que ces cliniques se multiplient pour réduire les temps d'attente. C'est leur principal avantage pour les patients qui ont besoin de soins non urgents."
+  },
+  {
+    "id": 18,
+    "section": "comprehension-ecrite",
+    "niveau": "B1",
+    "texte": "Au Québec, les médicaments sur ordonnance ne sont pas toujours couverts entièrement par l'assurance-maladie publique. Plusieurs résidents doivent souscrire à une assurance-médicaments privée ou payer une partie des frais eux-mêmes. Les personnes âgées et les enfants bénéficient souvent de couvertures plus complètes.",
+    "question": "Comment les médicaments sur ordonnance sont-ils généralement couverts au Québec?",
+    "options": [
+      "Complètement gratuitement pour tous",
+      "Partiellement par l'assurance publique, mais les patients peuvent avoir à payer une partie",
+      "Uniquement pour les enfants",
+      "Pas du tout par le système public"
+    ],
+    "correct": 1,
+    "explication": "Le texte indique que les médicaments ne sont pas entièrement couverts par l'assurance-maladie publique et que les résidents doivent souvent contribuer aux frais ou avoir une assurance privée."
+  },
+  {
+    "id": 19,
+    "section": "comprehension-ecrite",
+    "niveau": "B1",
+    "texte": "Les centres de santé et de services sociaux (CSSS) sont des établissements régionaux qui offrent des services médicaux, dentaires et sociaux. Ils sont accessibles à tous les résidents du Québec et constituent souvent le premier point de contact pour les patients. Les CSSS travaillent en partenariat avec les hôpitaux pour assurer une continuité des soins.",
+    "question": "Quel rôle jouent les CSSS dans le système de santé québécois?",
+    "options": [
+      "Ils remplacent complètement les hôpitaux",
+      "Ils offrent des services régionaux et servent de premier point de contact pour les patients",
+      "Ils gèrent uniquement les médicaments",
+      "Ils sont réservés aux personnes âgées uniquement"
+    ],
+    "correct": 1,
+    "explication": "Le texte explique que les CSSS offrent des services variés et constituent le premier point de contact pour les patients dans leur région, travaillant en lien avec les hôpitaux."
+  },
+  {
+    "id": 20,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "La transition énergétique représente un enjeu majeur pour les gouvernements contemporains. Bien que les énergies renouvelables se développent rapidement, leur intégration dans les réseaux électriques existants pose des défis technologiques considérables. Les fluctuations de production solaire et éolienne nécessitent des systèmes de stockage sophistiqués et coûteux.",
+    "question": "Quel est le principal obstacle à l'expansion des énergies renouvelables selon ce texte?",
+    "options": [
+      "Leur coût de production initial",
+      "La difficulté à les intégrer aux réseaux existants et à stocker l'énergie",
+      "Le manque d'intérêt gouvernemental",
+      "Leur faible rendement énergétique"
+    ],
+    "correct": 1,
+    "explication": "Le texte indique explicitement que l'intégration aux réseaux existants et le besoin de systèmes de stockage sophistiqués constituent les principaux défis technologiques."
+  },
+  {
+    "id": 21,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "L'économie circulaire s'oppose fondamentalement au modèle linéaire de production « extraire-consommer-jeter ». En repensant les processus de fabrication pour minimiser les déchets et valoriser les sous-produits, les entreprises réduisent simultanément leur empreinte écologique et optimisent leurs coûts opérationnels.",
+    "question": "Selon le texte, quels sont les bénéfices de l'économie circulaire pour les entreprises?",
+    "options": [
+      "Uniquement une réduction des coûts",
+      "Uniquement une meilleure image de marque",
+      "Une réduction de l'empreinte écologique et une optimisation des coûts",
+      "Une augmentation de la production"
+    ],
+    "correct": 2,
+    "explication": "Le texte affirme clairement que l'économie circulaire réduit l'empreinte écologique ET optimise les coûts opérationnels simultanément."
+  },
+  {
+    "id": 22,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "Les écosystèmes urbains fragmentés par l'étalement urbain subissent une érosion progressive de leur biodiversité. Les corridors écologiques, ces zones de transition reliant les espaces naturels isolés, s'avèrent essentiels pour permettre la circulation des espèces et maintenir la viabilité génétique des populations.",
+    "question": "Pourquoi les corridors écologiques sont-ils importants dans les zones urbaines?",
+    "options": [
+      "Ils réduisent la pollution de l'air",
+      "Ils permettent la circulation des espèces et maintiennent la viabilité génétique des populations",
+      "Ils diminuent la température urbaine",
+      "Ils offrent des espaces de loisir aux citadins"
+    ],
+    "correct": 1,
+    "explication": "Le texte spécifie explicitement que les corridors écologiques permettent la circulation des espèces et maintiennent la viabilité génétique des populations."
+  },
+  {
+    "id": 23,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "La sobriété énergétique constitue un complément indispensable aux investissements massifs en énergies renouvelables. Réduire les consommations superflues par des changements comportementaux et une meilleure isolation thermique des bâtiments s'avère plus rapide et moins onéreux que la transition technologique seule.",
+    "question": "Quelle est la relation entre sobriété énergétique et transition énergétique selon ce passage?",
+    "options": [
+      "Elles sont concurrentes",
+      "La sobriété est une alternative à la transition énergétique",
+      "La sobriété est un complément nécessaire à la transition énergétique",
+      "Elles n'ont aucun lien"
+    ],
+    "correct": 2,
+    "explication": "Le texte affirme que la sobriété énergétique est « un complément indispensable » aux investissements en énergies renouvelables."
+  },
+  {
+    "id": 24,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "L'agriculture intensive a permis d'augmenter les rendements alimentaires mondiaux, mais au prix d'une dégradation massive des sols et d'une perturbation des équilibres hydriques. L'agroécologie propose une alternative : des méthodes respectueuses des cycles naturels qui restaurent progressivement la fertilité tout en réduisant la dépendance aux intrants chimiques.",
+    "question": "Quel paradoxe l'agriculture intensive présente-t-elle?",
+    "options": [
+      "Elle réduit les rendements tout en polluant",
+      "Elle augmente les rendements mais dégrade les ressources naturelles",
+      "Elle est respectueuse de l'environnement",
+      "Elle ne pose aucun problème environnemental"
+    ],
+    "correct": 1,
+    "explication": "Le texte expose clairement que l'agriculture intensive a augmenté les rendements mais « au prix d'une dégradation massive des sols »."
+  },
+  {
+    "id": 25,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "L'évaluation du cycle de vie (ACV) des produits révèle souvent des incohérences entre l'image écologique perçue et l'impact réel. Un produit étiqueté « écologique » peut générer une empreinte carbone supérieure à ses alternatives conventionnelles si sa fabrication est délocalisée ou son transport particulièrement carboné.",
+    "question": "Que révèle l'ACV selon ce texte?",
+    "options": [
+      "Que tous les produits écologiques sont vraiment écologiques",
+      "Que certains produits réputés écologiques peuvent avoir un impact réel supérieur à d'autres",
+      "Que le transport n'a aucune influence sur l'empreinte carbone",
+      "Que les produits locaux sont toujours meilleurs"
+    ],
+    "correct": 1,
+    "explication": "Le texte indique que l'ACV révèle des « incohérences » et qu'un produit étiqueté écologique peut avoir une « empreinte carbone supérieure » à ses alternatives."
+  },
+  {
+    "id": 26,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "L'adaptation aux changements climatiques s'impose désormais comme incontournable, même si les efforts d'atténuation s'intensifient. Les régions côtières doivent anticiper l'élévation du niveau des mers, les zones arides préparer des stratégies de gestion hydrique, tandis que les pays nordiques réfléchissent aux implications d'un dégel du permafrost.",
+    "question": "Pourquoi l'adaptation climatique devient-elle inévitable?",
+    "options": [
+      "Parce que l'atténuation n'existe pas",
+      "Parce que certains changements climatiques sont déjà en cours et inévitables à court terme",
+      "Parce qu'elle est moins coûteuse que l'atténuation",
+      "Parce que les énergies renouvelables ne fonctionnent pas"
+    ],
+    "correct": 1,
+    "explication": "Le texte affirme que l'adaptation s'impose « même si les efforts d'atténuation s'intensifient », impliquant que certains changements sont inévitables et nécessitent de l'adaptation."
+  },
+  {
+    "id": 27,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "La financiarisation du secteur environnemental a généré des instruments innovants comme les obligations vertes ou les crédits carbone. Cependant, le risque de greenwashing demeure persistant : certains investissements étiquetés « verts » manquent de rigueur méthodologique et servent surtout à améliorer l'image corporative sans impacts réels.",
+    "question": "Quel est le principal risque des instruments financiers verts?",
+    "options": [
+      "Leur inexistence",
+      "L'absence d'impacts environnementaux réels malgré le label vert",
+      "Leur coût trop élevé",
+      "Ils ne sont jamais utilisés"
+    ],
+    "correct": 1,
+    "explication": "Le texte identifie explicitement le risque du greenwashing : des investissements verts « manquent de rigueur méthodologique » et « servent surtout à améliorer l'image » sans impacts réels."
+  },
+  {
+    "id": 28,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "La justice climatique soulève une question éthique fondamentale : ceux qui ont le moins contribué aux émissions historiques de gaz à effet de serre subissent les conséquences les plus graves. Les petits États insulaires, bien que responsables de moins de 1% des émissions mondiales, font face à l'extinction potentielle de leur territoire.",
+    "question": "En quoi consiste principalement l'injustice climatique décrite?",
+    "options": [
+      "Les pays riches polluent moins que les pays pauvres",
+      "Les principaux responsables des émissions ne subissent pas les pires conséquences tandis que les moins responsables en souffrent gravement",
+      "Tous les pays sont également affectés",
+      "Les petits États insulaires sont les plus grands pollueurs"
+    ],
+    "correct": 1,
+    "explication": "Le texte expose clairement l'injustice : ceux « qui ont le moins contribué » subissent « les conséquences les plus graves », exemplifié par les petits États insulaires."
+  },
+  {
+    "id": 29,
+    "section": "comprehension-ecrite",
+    "niveau": "C1",
+    "texte": "L'économie de la régénération dépasse la simple durabilité en visant à restaurer activement les écosystèmes dégradés. Contrairement aux approches qui se contentent de minimiser les dégâts, elle propose de reconstituer les stocks naturels : réhumidifier les zones arides, réensauvager les terres cultivées abandonnées, et restaurer les zones humides.",
+    "question": "Quelle différence fondamentale existe-t-il entre durabilité et régénération selon ce texte?",
+    "options": [
+      "La durabilité est plus efficace que la régénération",
+      "La durabilité vise à minimiser les dégâts tandis que la régénération cherche à restaurer activement",
+      "Elles sont identiques",
+      "La régénération est moins coûteuse"
+    ],
+    "correct": 1,
+    "explication": "Le texte établit clairement que la régénération « dépasse la simple durabilité » et « propose de reconstituer », contrairement aux approches qui « se contentent de minimiser les dégâts »."
+  }
+]
