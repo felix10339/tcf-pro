@@ -31,6 +31,7 @@ body {
   color: var(--texte);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 button {
@@ -55,59 +56,6 @@ input:focus, textarea:focus, select:focus {
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-
-.card {
-  background: var(--blanc);
-  border-radius: var(--rayon);
-  box-shadow: var(--ombre);
-  transition: box-shadow 0.18s, transform 0.18s;
-}
-
-.card:hover { box-shadow: var(--ombre-hover); }
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--vert), var(--vert-fonce));
-  color: white;
-  border: none;
-  border-radius: var(--rayon-sm);
-  padding: 12px 24px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(29,158,117,0.3);
-}
-
-.btn-secondary {
-  background: white;
-  color: var(--texte);
-  border: 1.5px solid var(--bordure);
-  border-radius: var(--rayon-sm);
-  padding: 12px 24px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.gradient-dark {
-  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-}
-
-.badge-pro {
-  background: linear-gradient(135deg, #1D9E75, #0F6E56);
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-}
-
-.badge-gratuit {
-  background: #f3f4f6;
-  color: #6b7280;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 20px;
-}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -119,8 +67,18 @@ input:focus, textarea:focus, select:focus {
   to { transform: scaleY(1); opacity: 1; }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes loading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 
 .animate-fade { animation: fadeIn 0.3s ease forwards; }
+
+/* RESPONSIVE UTILITAIRES */
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+}
+
+@media (min-width: 769px) {
+  .mobile-only { display: none !important; }
+}
