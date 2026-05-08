@@ -123,7 +123,7 @@ function ExpressionOrale({ onRetour }) {
     }
     setChargement(true);
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ia/corriger-oral`, {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL || `${API_URL}'}/api/ia/corriger-oral`, {
         tache: sujetChoisi.tache,
         sujet: sujetChoisi.sujet,
         transcription,

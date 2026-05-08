@@ -18,7 +18,7 @@ function ExpressionEcrite({ onRetour }) {
     if (!redaction.trim()) return;
     setChargement(true);
     try {
-      const res = await axios.post( `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ia/corriger-redaction`, {
+      const res = await axios.post( `${process.env.REACT_APP_API_URL || `${API_URL}'}/api/ia/corriger-redaction`, {
         tache: sujetChoisi.tache,
         sujet: sujetChoisi.sujet,
         redaction,

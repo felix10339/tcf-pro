@@ -21,7 +21,7 @@ function PaiementSucces({ onMisAJour }) {
         setTentatives(essai + 1);
 
         const res = await axios.get(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/paiement/verifier-session/${sessionId}`,
+          `${process.env.REACT_APP_API_URL || `${API_URL}'}/api/paiement/verifier-session/${sessionId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
