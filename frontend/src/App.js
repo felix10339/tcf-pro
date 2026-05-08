@@ -13,7 +13,7 @@ import Admin from './pages/Admin';
 import Profil from './pages/Profil';
 
 function AppContent() {
-  const [utilisateur, setUtilisateur] = useState(null);
+  
   const [sectionActive, setSectionActive] = useState(null);
   const [page, setPage] = useState('accueil');
 
