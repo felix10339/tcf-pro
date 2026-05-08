@@ -15,8 +15,8 @@ function Inscription({ onConnecte }) {
     setChargement(true);
     try {
       const url = mode === 'inscription'
-        ? `${API_URL}/api/auth/inscription`
-        : `${API_URL}/api/auth/connexion`;
+        ? API_URL + '/api/auth/inscription'
+        : API_URL + '/api/auth/connexion';
 
       const body = mode === 'inscription'
         ? { nom, email, motDePasse }
