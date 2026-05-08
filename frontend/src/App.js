@@ -12,18 +12,16 @@ import PaiementSucces from './pages/PaiementSucces';
 import Admin from './pages/Admin';
 import Profil from './pages/Profil';
 
-function AppContent({ utilisateurGlobal, onMisAJourGlobal }) {
-  const [utilisateur, setUtilisateur] = useState(utilisateurGlobal);
+function App() {
+  const [utilisateur, setUtilisateur] = useState(null);
   const [sectionActive, setSectionActive] = useState(null);
-  const [page, setPage] = useState(utilisateurGlobal ? 'app' : 'accueil');
+  const [page, setPage] = useState('accueil');
   const [menuMobileOuvert, setMenuMobileOuvert] = useState(false);
 
   useEffect(() => {
-    if (utilisateurGlobal) {
-      setUtilisateur(utilisateurGlobal);
-      setPage('app');
-    }
-  }, [utilisateurGlobal]);
+    const u = localStorage.getItem('utilisateur');
+    if (u) { setUtilisateur(JSON.parse(u)); setPage('app'); }
+  }, []);
 
   const seDeconnecter = () => {
     localStorage.removeItem('token');
@@ -32,23 +30,15 @@ function AppContent({ utilisateurGlobal, onMisAJourGlobal }) {
     setSectionActive(null);
     setPage('accueil');
     setMenuMobileOuvert(false);
-    onMisAJourGlobal(null);
   };
 
-  const onConnecte = (u) => {
-    setUtilisateur(u);
-    setPage('app');
-    onMisAJourGlobal(u);
-  };
+  const onConnecte = (u) => { setUtilisateur(u); setPage('app'); };
 
   const onMisAJour = useCallback((u) => {
     setUtilisateur(u);
-    if (u) {
-      localStorage.setItem('utilisateur', JSON.stringify(u));
-      onMisAJourGlobal(u);
-    }
+    if (u) localStorage.setItem('utilisateur', JSON.stringify(u));
     setPage('app');
-  }, [onMisAJourGlobal]);
+  }, []);
 
   const naviguer = (p) => {
     setPage(p);
@@ -64,7 +54,6 @@ function AppContent({ utilisateurGlobal, onMisAJourGlobal }) {
 
   const navbar = (
     <div style={{ borderBottom: '1px solid #e5e7eb', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-
       <span onClick={() => naviguer('app')} style={{ fontWeight: '800', fontSize: '18px', cursor: 'pointer', letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', flexShrink: 0 }}>
         TCFPro 🇫🇷
       </span>
@@ -77,7 +66,7 @@ function AppContent({ utilisateurGlobal, onMisAJourGlobal }) {
           </button>
         )}
         {!estPro && (
-          <button onClick={() => naviguer('tarifs')} style={{ padding: '7px 14px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', boxShadow: '0 2px 8px rgba(29,158,117,0.3)' }}>
+          <button onClick={() => naviguer('tarifs')} style={{ padding: '7px 14px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>
             ⭐ Passer Pro
           </button>
         )}
@@ -165,43 +154,22 @@ function AppContent({ utilisateurGlobal, onMisAJourGlobal }) {
   };
 
   return (
-    <>
-      {navbar}
-      {page === 'profil' ? <Profil utilisateur={utilisateur} onMisAJour={onMisAJour} onRetour={() => naviguer('app')} onTarifs={() => naviguer('tarifs')} />
-      : page === 'admin' ? <Admin onRetour={() => naviguer('app')} />
-      : page === 'tarifs' ? <Tarifs utilisateur={utilisateur} onRetour={() => naviguer('app')} />
-      : page === 'simulateur' ? <PagePro><Simulateur utilisateur={utilisateur} onRetour={() => naviguer('app')} /></PagePro>
-      : page === 'expression-ecrite' ? <PagePro><ExpressionEcrite onRetour={() => naviguer('app')} utilisateur={utilisateur} /></PagePro>
-      : page === 'expression-orale' ? <PagePro><ExpressionOrale onRetour={() => naviguer('app')} utilisateur={utilisateur} /></PagePro>
-      : sectionActive ? <Quiz section={sectionActive} utilisateur={utilisateur} onRetourDashboard={() => setSectionActive(null)} />
-      : <Dashboard utilisateur={utilisateur} onCommencerQuiz={naviguerSection} onSimulateur={() => estPro ? naviguer('simulateur') : naviguer('tarifs')} onTarifs={() => naviguer('tarifs')} />}
-    </>
-  );
-}
-
-function App() {
-  const [utilisateur, setUtilisateur] = useState(null);
-
-  useEffect(() => {
-    const u = localStorage.getItem('utilisateur');
-    if (u) setUtilisateur(JSON.parse(u));
-  }, []);
-
-  const onMisAJour = useCallback((u) => {
-    if (u) {
-      setUtilisateur(u);
-      localStorage.setItem('utilisateur', JSON.stringify(u));
-    } else {
-      setUtilisateur(null);
-      localStorage.removeItem('utilisateur');
-    }
-  }, []);
-
-  return (
     <BrowserRouter>
       <Routes>
         <Route path="/paiement-succes" element={<PaiementSucces onMisAJour={onMisAJour} />} />
-        <Route path="*" element={<AppContent utilisateurGlobal={utilisateur} onMisAJourGlobal={onMisAJour} />} />
+        <Route path="*" element={
+          <>
+            {navbar}
+            {page === 'profil' ? <Profil utilisateur={utilisateur} onMisAJour={onMisAJour} onRetour={() => naviguer('app')} onTarifs={() => naviguer('tarifs')} />
+            : page === 'admin' ? <Admin onRetour={() => naviguer('app')} />
+            : page === 'tarifs' ? <Tarifs utilisateur={utilisateur} onRetour={() => naviguer('app')} />
+            : page === 'simulateur' ? <PagePro><Simulateur utilisateur={utilisateur} onRetour={() => naviguer('app')} /></PagePro>
+            : page === 'expression-ecrite' ? <PagePro><ExpressionEcrite onRetour={() => naviguer('app')} utilisateur={utilisateur} /></PagePro>
+            : page === 'expression-orale' ? <PagePro><ExpressionOrale onRetour={() => naviguer('app')} utilisateur={utilisateur} /></PagePro>
+            : sectionActive ? <Quiz section={sectionActive} utilisateur={utilisateur} onRetourDashboard={() => setSectionActive(null)} />
+            : <Dashboard utilisateur={utilisateur} onCommencerQuiz={naviguerSection} onSimulateur={() => estPro ? naviguer('simulateur') : naviguer('tarifs')} onTarifs={() => naviguer('tarifs')} />}
+          </>
+        } />
       </Routes>
     </BrowserRouter>
   );
