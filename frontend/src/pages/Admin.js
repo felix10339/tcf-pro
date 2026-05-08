@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-
+import API_URL from '../config';
 function Admin({ onRetour }) {
   const [theme, setTheme] = useState('');
   const [section, setSection] = useState('comprehension-ecrite');

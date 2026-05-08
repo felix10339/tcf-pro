@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Question from '../components/Question';
 import Timer from '../components/Timer';
+import API_URL from '../config';
 
 function Quiz({ section, utilisateur, onRetourDashboard }) {
   const [questions, setQuestions] = useState([]);

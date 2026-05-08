@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import API_URL from '../config';
 
 function Generateur({ onRetour }) {
   const [theme, setTheme] = useState('');
@@ -33,7 +34,7 @@ function Generateur({ onRetour }) {
     setResultat(null);
 
     try {
-      const res = await axios.post('${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ia/generer-questions', {
+      const res = await axios.post(`${API_URL}/api/ia/generer-questions`, {
         theme, section, niveau, nombre
       });
       setResultat(res.data);

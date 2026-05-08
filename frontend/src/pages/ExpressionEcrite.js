@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import sujets from '../data/sujets-expression-ecrite';
+import API_URL from '../config';
 
 function ExpressionEcrite({ onRetour }) {
   const [phase, setPhase] = useState('choix');

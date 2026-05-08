@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-
+import API_URL from '../config';
 function Tarifs({ utilisateur, onRetour }) {
   const [planChoisi, setPlanChoisi] = useState('mensuel');
   const [chargement, setChargement] = useState(false);

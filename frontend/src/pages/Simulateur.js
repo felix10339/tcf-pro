@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import AudioPlayer from '../components/AudioPlayer';
+import API_URL from '../config';
 
 function Simulateur({ utilisateur, onRetour }) {
   const [phase, setPhase] = useState('intro');

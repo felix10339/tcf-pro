@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import API_URL from '../config';
 
 function Inscription({ onConnecte }) {
   const [mode, setMode] = useState('connexion');

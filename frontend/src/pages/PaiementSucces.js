@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-
+import API_URL from '../config';
 function PaiementSucces({ onMisAJour }) {
   const [searchParams] = useSearchParams();
   const [statut, setStatut] = useState('verification');

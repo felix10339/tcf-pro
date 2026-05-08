@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../config';
 
 function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
   const [stats, setStats] = useState(null);
