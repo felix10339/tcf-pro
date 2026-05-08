@@ -66,7 +66,7 @@ function Admin({ onRetour }) {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-         `${process.env.REACT_APP_API_URL || `${API_URL}'}/api/ia/generer-questions`,
+         `${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/ia/generer-questions`,
         { theme, section, niveau, nombre },
         { headers: { Authorization: `Bearer ${token}` } }
       );

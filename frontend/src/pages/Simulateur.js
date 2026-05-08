@@ -65,7 +65,7 @@ function Simulateur({ utilisateur, onRetour }) {
   }, [phase, epreuve]);
 
   const chargerQuestions = async (section) => {
-    const res = await axios.get(`${process.env.REACT_APP_API_URL || `${API_URL}'}/api/questions/section/${section}`);
+    const res = await axios.get(`${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/questions/section/${section}`);
     return res.data.slice(0, 5);
   };
 

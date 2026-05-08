@@ -16,7 +16,7 @@ function Quiz({ section, utilisateur, onRetourDashboard }) {
   const [chargementIA, setChargementIA] = useState(false);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL || `${API_URL}'}/api/questions/section/${section}`)
+    axios.get(`${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/questions/section/${section}`)
       .then(res => setQuestions(res.data))
       .catch(err => console.error(err));
   }, [section]);
@@ -71,7 +71,7 @@ function Quiz({ section, utilisateur, onRetourDashboard }) {
 
     try {
       const q = questions[indexActuel];
-      const res = await axios.post( `${process.env.REACT_APP_API_URL || `${API_URL}'}/api/ia/expliquer`, {
+      const res = await axios.post( `${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/ia/expliquer`, {
         question: q.question,
         reponseUtilisateur: reponseSelectionnee,
         bonneReponse: q.correct,

@@ -33,7 +33,7 @@ function Tarifs({ utilisateur, onRetour }) {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL || `${API_URL}'}/api/paiement/creer-session`,
+        `${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/paiement/creer-session`,
         { plan: planChoisi },
         { headers: { Authorization: `Bearer ${token}` } }
       );

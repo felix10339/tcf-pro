@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
 
-function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
+function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
   const [stats, setStats] = useState(null);
   const [historique, setHistorique] = useState([]);
   const [onglet, setOnglet] = useState('apercu');
@@ -41,7 +41,7 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
     setChargement(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${process.env.REACT_APP_API_URL || `${API_URL}'}/api/auth/modifier-profil`,
+      await axios.put(`${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/auth/modifier-profil`,
         { nom: nouveauNom },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -60,7 +60,7 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
     setChargement(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${process.env.REACT_APP_API_URL ||  `${API_URL}'}/api/auth/changer-mot-de-passe`,
+      await axios.put(`${process.env.REACT_APP_API_URL ||  '`${API_URL}``}/api/auth/changer-mot-de-passe`,
         { ancienMotDePasse: ancienMDP, nouveauMotDePasse: nouveauMDP },
         { headers: { Authorization: `Bearer ${token}` } }
       );

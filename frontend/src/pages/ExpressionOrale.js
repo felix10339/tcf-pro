@@ -3,7 +3,7 @@ import axios from 'axios';
 import sujets from '../data/sujets-expression-orale';
 import API_URL from '../config';
 
-function ExpressionOrale({ onRetour }) {
+function ExpressionOrale({ onRetour })  {
   const [phase, setPhase] = useState('choix');
   const [sujetChoisi, setSujetChoisi] = useState(null);
   const [enregistrement, setEnregistrement] = useState(false);
@@ -122,8 +122,8 @@ function ExpressionOrale({ onRetour }) {
       return;
     }
     setChargement(true);
-    try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL || `${API_URL}'}/api/ia/corriger-oral`, {
+    try  { 
+      const res = await axios.post (`${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/ia/corriger-oral`, {
         tache: sujetChoisi.tache,
         sujet: sujetChoisi.sujet,
         transcription,
