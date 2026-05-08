@@ -12,16 +12,18 @@ import PaiementSucces from './pages/PaiementSucces';
 import Admin from './pages/Admin';
 import Profil from './pages/Profil';
 
-function AppContent() {
-  const [utilisateur, setUtilisateur] = useState(null);
+function AppContent({ utilisateurGlobal, onMisAJourGlobal }) {
+  const [utilisateur, setUtilisateur] = useState(utilisateurGlobal);
   const [sectionActive, setSectionActive] = useState(null);
-  const [page, setPage] = useState('accueil');
+  const [page, setPage] = useState(utilisateurGlobal ? 'app' : 'accueil');
   const [menuMobileOuvert, setMenuMobileOuvert] = useState(false);
 
   useEffect(() => {
-    const u = localStorage.getItem('utilisateur');
-    if (u) { setUtilisateur(JSON.parse(u)); setPage('app'); }
-  }, []);
+    if (utilisateurGlobal) {
+      setUtilisateur(utilisateurGlobal);
+      setPage('app');
+    }
+  }, [utilisateurGlobal]);
 
   const seDeconnecter = () => {
     localStorage.removeItem('token');
@@ -30,15 +32,23 @@ function AppContent() {
     setSectionActive(null);
     setPage('accueil');
     setMenuMobileOuvert(false);
+    onMisAJourGlobal(null);
   };
 
-  const onConnecte = (u) => { setUtilisateur(u); setPage('app'); };
+  const onConnecte = (u) => {
+    setUtilisateur(u);
+    setPage('app');
+    onMisAJourGlobal(u);
+  };
 
   const onMisAJour = useCallback((u) => {
     setUtilisateur(u);
-    localStorage.setItem('utilisateur', JSON.stringify(u));
+    if (u) {
+      localStorage.setItem('utilisateur', JSON.stringify(u));
+      onMisAJourGlobal(u);
+    }
     setPage('app');
-  }, []);
+  }, [onMisAJourGlobal]);
 
   const naviguer = (p) => {
     setPage(p);
@@ -54,13 +64,12 @@ function AppContent() {
 
   const navbar = (
     <div style={{ borderBottom: '1px solid #e5e7eb', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-      
-      {/* Logo */}
+
       <span onClick={() => naviguer('app')} style={{ fontWeight: '800', fontSize: '18px', cursor: 'pointer', letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', flexShrink: 0 }}>
         TCFPro 🇫🇷
       </span>
 
-      {/* Desktop nav */}
+      {/* Desktop */}
       <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {estAdmin && (
           <button onClick={() => naviguer('admin')} style={{ padding: '7px 14px', background: 'linear-gradient(135deg, #7F77DD, #5A52B5)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>
@@ -90,7 +99,7 @@ function AppContent() {
         </button>
       </div>
 
-      {/* Mobile nav */}
+      {/* Mobile */}
       <div className="mobile-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {estPro && (
           <div style={{ background: '#E1F5EE', color: '#0F6E56', fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '20px' }}>✅ Pro</div>
@@ -101,9 +110,8 @@ function AppContent() {
         </button>
       </div>
 
-      {/* Menu mobile déroulant */}
       {menuMobileOuvert && (
-        <div className="mobile-only" style={{ position: 'fixed', top: '57px', left: 0, right: 0, background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '16px 20px', zIndex: 99, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="mobile-only" style={{ position: 'fixed', top: '57px', left: 0, right: 0, background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '16px', zIndex: 99, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button onClick={() => naviguer('app')} style={{ padding: '12px 16px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', textAlign: 'left', color: '#1a1a2e' }}>
             🏠 Tableau de bord
           </button>
@@ -144,10 +152,10 @@ function AppContent() {
         <div style={{ textAlign: 'center', maxWidth: '400px' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>🔒</div>
           <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '10px' }}>Fonctionnalité Pro</h2>
-          <p style={{ color: '#6b7280', marginBottom: '28px', lineHeight: '1.7', fontSize: '15px' }}>
+          <p style={{ color: '#6b7280', marginBottom: '28px', lineHeight: '1.7' }}>
             Cette fonctionnalité est réservée aux membres Pro.
           </p>
-          <button onClick={() => setPage('tarifs')} style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: '700', boxShadow: '0 4px 15px rgba(29,158,117,0.3)' }}>
+          <button onClick={() => setPage('tarifs')} style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: '700' }}>
             ⭐ Voir les plans Pro →
           </button>
         </div>
@@ -180,15 +188,20 @@ function App() {
   }, []);
 
   const onMisAJour = useCallback((u) => {
-    setUtilisateur(u);
-    localStorage.setItem('utilisateur', JSON.stringify(u));
+    if (u) {
+      setUtilisateur(u);
+      localStorage.setItem('utilisateur', JSON.stringify(u));
+    } else {
+      setUtilisateur(null);
+      localStorage.removeItem('utilisateur');
+    }
   }, []);
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/paiement-succes" element={<PaiementSucces onMisAJour={onMisAJour} />} />
-        <Route path="*" element={<AppContent />} />
+        <Route path="*" element={<AppContent utilisateurGlobal={utilisateur} onMisAJourGlobal={onMisAJour} />} />
       </Routes>
     </BrowserRouter>
   );
