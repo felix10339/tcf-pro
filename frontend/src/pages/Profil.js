@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
 
-function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
+function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
   const [stats, setStats] = useState(null);
   const [historique, setHistorique] = useState([]);
   const [onglet, setOnglet] = useState('apercu');
@@ -17,7 +17,6 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
   useEffect(() => {
     const s = localStorage.getItem(`stats-${utilisateur.id}`);
     if (s) setStats(JSON.parse(s));
-
     const h = localStorage.getItem(`historique-${utilisateur.id}`);
     if (h) setHistorique(JSON.parse(h));
   }, [utilisateur.id]);
@@ -41,7 +40,7 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
     setChargement(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/auth/modifier-profil`,
+      await axios.put(`${API_URL}/api/auth/modifier-profil`,
         { nom: nouveauNom },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -50,8 +49,12 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
       onMisAJour(u);
       setModifNom(false);
       setMessage('✅ Nom modifié avec succès');
-    } catch { setMessage('❌ Erreur lors de la modification'); }
-    finally { setChargement(false); setTimeout(() => setMessage(''), 3000); }
+    } catch {
+      setMessage('❌ Erreur lors de la modification');
+    } finally {
+      setChargement(false);
+      setTimeout(() => setMessage(''), 3000);
+    }
   };
 
   const changerMotDePasse = async () => {
@@ -60,15 +63,19 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
     setChargement(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${process.env.REACT_APP_API_URL ||  '`${API_URL}``}/api/auth/changer-mot-de-passe`,
+      await axios.put(`${API_URL}/api/auth/changer-mot-de-passe`,
         { ancienMotDePasse: ancienMDP, nouveauMotDePasse: nouveauMDP },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setAncienMDP(''); setNouveauMDP('');
+      setAncienMDP('');
+      setNouveauMDP('');
       setMessage('✅ Mot de passe modifié avec succès');
     } catch (err) {
       setMessage(err.response?.data?.message || '❌ Erreur lors du changement');
-    } finally { setChargement(false); setTimeout(() => setMessage(''), 4000); }
+    } finally {
+      setChargement(false);
+      setTimeout(() => setMessage(''), 4000);
+    }
   };
 
   const inputStyle = {
@@ -88,7 +95,6 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
   return (
     <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
 
-      {/* Header */}
       <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '32px 32px 80px', color: '#fff' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <button onClick={onRetour} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '14px', marginBottom: '24px', padding: 0 }}>
@@ -111,7 +117,6 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
 
       <div style={{ maxWidth: '800px', margin: '-48px auto 0', padding: '0 20px 40px' }}>
 
-        {/* Onglets */}
         <div style={{ background: '#fff', borderRadius: '14px', padding: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '20px', display: 'flex', gap: '4px' }}>
           {onglets.map(o => (
             <button key={o.key} onClick={() => setOnglet(o.key)}
@@ -121,14 +126,12 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
           ))}
         </div>
 
-        {/* Message */}
         {message && (
           <div style={{ background: message.includes('✅') ? '#E1F5EE' : '#FCEBEB', border: `1px solid ${message.includes('✅') ? '#9FE1CB' : '#F09595'}`, borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', fontSize: '14px', color: message.includes('✅') ? '#085041' : '#A32D2D', fontWeight: '500' }}>
             {message}
           </div>
         )}
 
-        {/* APERÇU */}
         {onglet === 'apercu' && (
           <div className="animate-fade">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
@@ -144,8 +147,6 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
                 </div>
               ))}
             </div>
-
-            {/* Activité récente */}
             <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px' }}>🕐 Activité récente</h3>
               {stats?.totalQuestions > 0 ? (
@@ -178,7 +179,6 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
           </div>
         )}
 
-        {/* PROGRESSION */}
         {onglet === 'progression' && (
           <div className="animate-fade">
             <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
@@ -209,8 +209,6 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
                 })}
               </div>
             </div>
-
-            {/* Objectif */}
             <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43)', borderRadius: '14px', padding: '22px', color: '#fff' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>🎯 Objectif TCF</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
@@ -225,10 +223,8 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
           </div>
         )}
 
-        {/* COMPTE */}
         {onglet === 'compte' && (
           <div className="animate-fade">
-            {/* Modifier nom */}
             <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px' }}>👤 Informations personnelles</h3>
               <div style={{ marginBottom: '14px' }}>
@@ -260,7 +256,6 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
               </div>
             </div>
 
-            {/* Changer mot de passe */}
             <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px' }}>🔒 Changer le mot de passe</h3>
               <div style={{ marginBottom: '14px' }}>
@@ -278,12 +273,10 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
           </div>
         )}
 
-        {/* ABONNEMENT */}
         {onglet === 'abonnement' && (
           <div className="animate-fade">
             <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '20px' }}>💳 Mon abonnement</h3>
-
               <div style={{ background: estPro ? 'linear-gradient(135deg, #0f2027, #203a43)' : '#f9fafb', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: estPro ? 'none' : '1.5px solid #e5e7eb' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
@@ -291,9 +284,7 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
                       {estPro ? '⭐ Plan Pro' : '🆓 Plan Gratuit'}
                     </div>
                     <div style={{ fontSize: '13px', color: estPro ? 'rgba(255,255,255,0.6)' : '#9ca3af' }}>
-                      {estPro
-                        ? `Plan ${utilisateur.plan || 'mensuel'} — Toutes fonctionnalités incluses`
-                        : 'Compréhension écrite et orale uniquement'}
+                      {estPro ? `Plan ${utilisateur.plan || 'mensuel'} — Toutes fonctionnalités incluses` : 'Compréhension écrite et orale uniquement'}
                     </div>
                     {estPro && utilisateur.dateFinAbonnement && (
                       <div style={{ fontSize: '12px', color: '#4ECDA4', marginTop: '6px', fontWeight: '600' }}>
@@ -304,13 +295,11 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs })  {
                   <div style={{ fontSize: '36px' }}>{estPro ? '✅' : '🔓'}</div>
                 </div>
               </div>
-
               {!estPro && (
                 <button onClick={onTarifs} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: '700', boxShadow: '0 4px 14px rgba(29,158,117,0.3)' }}>
                   ⭐ Passer à la version Pro →
                 </button>
               )}
-
               {estPro && (
                 <div style={{ background: '#E1F5EE', borderRadius: '10px', padding: '14px 16px' }}>
                   <p style={{ fontSize: '13px', color: '#0F6E56', fontWeight: '600', marginBottom: '8px' }}>✅ Fonctionnalités incluses dans votre plan :</p>
