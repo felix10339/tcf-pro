@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
 
 const questionsRoute = require('./routes/questions');
@@ -9,16 +8,16 @@ const paiementRoute = require('./routes/paiement');
 
 const app = express();
 
-// CORS — autoriser toutes les origines en production
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
-}));
-
-// Répondre aux preflight OPTIONS
-app.options('*', cors());
+// CORS manuel — avant tout le reste
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
 // Webhook Stripe avant express.json()
 app.use('/api/paiement/webhook', express.raw({ type: 'application/json' }));
