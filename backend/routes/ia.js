@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const SECRET = process.env.JWT_SECRET || 'tcf-canada-secret';
 
@@ -33,6 +35,11 @@ async function verifierAccesPro(userId) {
   return data?.abonnement === 'pro';
 }
 
+async function gemini(prompt) {
+  const result = await model.generateContent(prompt);
+  return result.response.text();
+}
+
 // Explication quiz
 router.post('/expliquer', verifierToken, async (req, res) => {
   const { question, reponseUtilisateur, bonneReponse, optionChoisie, bonneOption } = req.body;
@@ -40,23 +47,24 @@ router.post('/expliquer', verifierToken, async (req, res) => {
   const estPro = await verifierAccesPro(req.utilisateur.id);
   if (!estPro) {
     const aLaBonneReponse = reponseUtilisateur === bonneReponse;
-    return res.json({ explication: aLaBonneReponse ? explicationsSecours.correct : explicationsSecours.incorrect, limiteGratuit: true });
+    return res.json({
+      explication: aLaBonneReponse ? explicationsSecours.correct : explicationsSecours.incorrect,
+      limiteGratuit: true
+    });
   }
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: `Tu es un professeur de français expert en TCF.
-Un étudiant vient de répondre :
+    const texte = await gemini(`Tu es un professeur de français expert en TCF.
+Un étudiant vient de répondre à cette question :
 Question : ${question}
 Réponse choisie : ${optionChoisie}
 Bonne réponse : ${bonneOption}
 A-t-il bon ? ${reponseUtilisateur === bonneReponse ? 'Oui' : 'Non'}
-Donne une explication pédagogique (3-4 phrases) en français simple.` }]
-    });
-    res.json({ explication: message.content[0].text });
+Donne une explication pédagogique courte (3-4 phrases maximum) en français simple et clair.`);
+
+    res.json({ explication: texte });
   } catch (error) {
+    console.error('Erreur Gemini:', error);
     const aLaBonneReponse = reponseUtilisateur === bonneReponse;
     res.json({ explication: aLaBonneReponse ? explicationsSecours.correct : explicationsSecours.incorrect });
   }
@@ -70,22 +78,19 @@ router.post('/corriger-redaction', verifierToken, async (req, res) => {
   if (!estPro) return res.status(403).json({ message: 'Fonctionnalité réservée aux membres Pro', accesRefuse: true });
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: `Tu es un correcteur expert du TCF pour l'expression écrite en français.
+    const texte = await gemini(`Tu es un correcteur expert du TCF pour l'expression écrite en français.
 Tâche : ${tache}
 Sujet : ${sujet}
 Niveau cible : ${niveau}
-Rédaction :
+Rédaction de l'étudiant :
 """
 ${redaction}
 """
-Réponds UNIQUEMENT avec un JSON valide sans balises markdown :
-{"note":8,"note_max":20,"niveau_estime":"B2","points_forts":["..."],"points_ameliorer":["..."],"erreurs":[{"texte":"...","correction":"...","type":"grammaire"}],"conseils":"...","version_corrigee":"..."}` }]
-    });
-    let texte = message.content[0].text.trim().replace(/```json|```/g, '').trim();
-    const correction = JSON.parse(texte);
+Évalue cette rédaction et réponds UNIQUEMENT avec un objet JSON valide, sans balises markdown, sans texte avant ou après :
+{"note":8,"note_max":20,"niveau_estime":"B2","points_forts":["point 1","point 2"],"points_ameliorer":["point 1","point 2"],"erreurs":[{"texte":"phrase erronée","correction":"phrase corrigée","type":"grammaire"}],"conseils":"conseil global en 2-3 phrases","version_corrigee":"version améliorée courte"}`);
+
+    const propre = texte.replace(/```json|```/g, '').trim();
+    const correction = JSON.parse(propre);
 
     await supabase.from('redactions').insert([{
       utilisateur_id: req.utilisateur.id,
@@ -99,7 +104,7 @@ Réponds UNIQUEMENT avec un JSON valide sans balises markdown :
 
     res.json(correction);
   } catch (error) {
-    console.error(error);
+    console.error('Erreur Gemini:', error);
     res.status(500).json({ message: 'Erreur correction', erreur: error.message });
   }
 });
@@ -112,23 +117,20 @@ router.post('/corriger-oral', verifierToken, async (req, res) => {
   if (!estPro) return res.status(403).json({ message: 'Fonctionnalité réservée aux membres Pro', accesRefuse: true });
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 900,
-      messages: [{ role: 'user', content: `Tu es un correcteur expert du TCF pour l'expression orale en français.
+    const texte = await gemini(`Tu es un correcteur expert du TCF pour l'expression orale en français.
 Tâche : ${tache}
 Sujet : ${sujet}
 Niveau cible : ${niveau}
 Durée enregistrée : ${dureeEnregistree}s / ${dureeAttandue}s attendues
-Transcription :
+Transcription de l'étudiant :
 """
 ${transcription}
 """
-Réponds UNIQUEMENT avec un JSON valide sans balises markdown :
-{"note":12,"note_max":20,"niveau_estime":"B2","criteres":[{"nom":"Cohérence et structure","note":3,"max":5,"commentaire":"..."},{"nom":"Richesse lexicale","note":3,"max":5,"commentaire":"..."},{"nom":"Correction grammaticale","note":3,"max":5,"commentaire":"..."},{"nom":"Fluidité et aisance","note":3,"max":5,"commentaire":"..."}],"points_forts":["..."],"points_ameliorer":["..."],"conseils":"..."}` }]
-    });
-    let texte = message.content[0].text.trim().replace(/```json|```/g, '').trim();
-    const correction = JSON.parse(texte);
+Évalue cette production orale et réponds UNIQUEMENT avec un objet JSON valide, sans balises markdown, sans texte avant ou après :
+{"note":12,"note_max":20,"niveau_estime":"B2","criteres":[{"nom":"Cohérence et structure","note":3,"max":5,"commentaire":"..."},{"nom":"Richesse lexicale","note":3,"max":5,"commentaire":"..."},{"nom":"Correction grammaticale","note":3,"max":5,"commentaire":"..."},{"nom":"Fluidité et aisance","note":3,"max":5,"commentaire":"..."}],"points_forts":["point 1","point 2"],"points_ameliorer":["point 1","point 2"],"conseils":"conseil global en 2-3 phrases"}`);
+
+    const propre = texte.replace(/```json|```/g, '').trim();
+    const correction = JSON.parse(propre);
 
     await supabase.from('productions_orales').insert([{
       utilisateur_id: req.utilisateur.id,
@@ -142,38 +144,45 @@ Réponds UNIQUEMENT avec un JSON valide sans balises markdown :
 
     res.json(correction);
   } catch (error) {
-    console.error(error);
+    console.error('Erreur Gemini:', error);
     res.status(500).json({ message: 'Erreur correction orale', erreur: error.message });
   }
 });
 
-// Génération de questions (Pro uniquement)
+// Génération de questions (Admin uniquement)
 router.post('/generer-questions', verifierToken, async (req, res) => {
   const { theme, section, niveau, nombre } = req.body;
 
-  const estPro = await verifierAccesPro(req.utilisateur.id);
-  if (!estPro) return res.status(403).json({ message: 'Fonctionnalité réservée aux membres Pro', accesRefuse: true });
+  const { data: userInfo } = await supabase
+    .from('utilisateurs')
+    .select('email')
+    .eq('id', req.utilisateur.id)
+    .single();
+
+  if (userInfo?.email !== 'admin@tcfpro.com') {
+    return res.status(403).json({ message: 'Accès réservé à l\'administrateur' });
+  }
 
   const sectionLabel = {
     'comprehension-ecrite': 'compréhension écrite',
-    'comprehension-orale': 'compréhension orale'
+    'comprehension-orale': 'compréhension orale',
+    'expression-ecrite': 'expression écrite',
+    'expression-orale': 'expression orale'
   }[section] || 'compréhension écrite';
+
   const estOral = section === 'comprehension-orale';
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: `Tu es un expert en création de questions pour le TCF (Test de Connaissance du Français).
+    const texte = await gemini(`Tu es un expert en création de questions pour le TCF (Test de Connaissance du Français).
 Génère exactement ${nombre} questions de ${sectionLabel} sur le thème : "${theme}"
 Niveau : ${niveau}
-Les sujets doivent porter sur le français en général (culture française, vie quotidienne, grammaire, littérature, actualités francophones).
-Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ou après :
-[{"texte":"...","question":"...","options":["A","B","C","D"],"correct":1,"explication":"..."${estOral ? ',"audio_texte":"..."' : ''}}]` }]
-    });
+Les sujets doivent porter sur le français en général (culture française, vie quotidienne, société francophone, actualités).
+Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ou après, sans balises markdown :
+[{"texte":"texte du passage (2-4 phrases)","question":"la question posée","options":["option A","option B","option C","option D"],"correct":1,"explication":"explication courte"${estOral ? ',"audio_texte":"texte à lire à voix haute"' : ''}}]
+Important : "correct" est l'index (0,1,2,3) de la bonne réponse. Varie les bonnes réponses.`);
 
-    let texte = message.content[0].text.trim().replace(/```json|```/g, '').trim();
-    const nouvellesQuestions = JSON.parse(texte);
+    const propre = texte.replace(/```json|```/g, '').trim();
+    const nouvellesQuestions = JSON.parse(propre);
 
     const questionsFormatees = nouvellesQuestions.map(q => ({
       section,
@@ -195,6 +204,7 @@ Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ou après :
 
     res.json({ succes: true, nombreGenere: data.length, questions: data });
   } catch (error) {
+    console.error('Erreur Gemini:', error);
     res.status(500).json({ message: 'Erreur génération', erreur: error.message });
   }
 });
