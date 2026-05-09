@@ -16,13 +16,16 @@ function Quiz({ section, utilisateur, onRetourDashboard }) {
   const [chargementIA, setChargementIA] = useState(false);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/questions/section/${section}`)
+    const token = localStorage.getItem('token');
+    axios.get(API_URL + '/api/questions/section/' + section, {
+      headers: { Authorization: 'Bearer ' + token }
+    })
       .then(res => setQuestions(res.data))
       .catch(err => console.error(err));
   }, [section]);
 
   const sauvegarderStats = useCallback((bonnesReponses, totalQuestions) => {
-    const key = `stats-${utilisateur.id}`;
+    const key = 'stats-' + utilisateur.id;
     const savedStats = localStorage.getItem(key);
     const stats = savedStats ? JSON.parse(savedStats) : {
       totalQuestions: 0,
@@ -43,7 +46,6 @@ function Quiz({ section, utilisateur, onRetourDashboard }) {
       stats.sections[section].total += totalQuestions;
       stats.sections[section].bonnes += bonnesReponses;
     }
-
     localStorage.setItem(key, JSON.stringify(stats));
   }, [utilisateur.id, section]);
 
@@ -71,44 +73,63 @@ function Quiz({ section, utilisateur, onRetourDashboard }) {
 
     try {
       const q = questions[indexActuel];
-      const res = await axios.post( `${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/ia/expliquer`, {
-        question: q.question,
-        reponseUtilisateur: reponseSelectionnee,
-        bonneReponse: q.correct,
-        optionChoisie: q.options[reponseSelectionnee],
-        bonneOption: q.options[q.correct]
-      });
+      const token = localStorage.getItem('token');
+
+      const res = await axios.post(
+        API_URL + '/api/ia/expliquer',
+        {
+          question: q.question,
+          reponseUtilisateur: reponseSelectionnee,
+          bonneReponse: q.correct,
+          optionChoisie: q.options[reponseSelectionnee],
+          bonneOption: q.options[q.correct]
+        },
+        {
+          headers: { Authorization: 'Bearer ' + token }
+        }
+      );
       setExplicationIA(res.data.explication);
     } catch (err) {
+      console.error('Erreur IA:', err.response?.status, err.response?.data);
       const q = questions[indexActuel];
-      setExplicationIA(q.explication);
+      setExplicationIA(q.explication || "Relisez attentivement le texte pour identifier la bonne réponse.");
     } finally {
       setChargementIA(false);
     }
   }, [reponseSelectionnee, questions, indexActuel]);
 
-  if (questions.length === 0) return <p style={{ padding: '20px' }}>Chargement des questions...</p>;
+  if (questions.length === 0) return (
+    <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
+      <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
+      Chargement des questions...
+    </div>
+  );
 
   if (termine) {
     return (
       <div style={{ maxWidth: '600px', margin: '60px auto', textAlign: 'center', padding: '20px' }}>
-        <h2>Exercice terminé !</h2>
-        <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#1D9E75', margin: '16px 0' }}>
+        <div style={{ fontSize: '56px', marginBottom: '16px' }}>{score / questions.length >= 0.7 ? '🎉' : '💪'}</div>
+        <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>Exercice terminé !</h2>
+        <p style={{ fontSize: '36px', fontWeight: '800', color: '#1D9E75', margin: '16px 0' }}>
           {score} / {questions.length}
         </p>
-        <p style={{ color: '#888', fontSize: '14px', marginBottom: '24px' }}>
+        <p style={{ color: '#888', fontSize: '15px', marginBottom: '28px' }}>
           {Math.round((score / questions.length) * 100)}% de bonnes réponses
         </p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
           <button
-            onClick={() => { setIndexActuel(0); setScore(0); setTermine(false); setValide(false); setReponseSelectionnee(null); setExplicationIA(''); setCle(k => k + 1); }}
-            style={{ padding: '12px 24px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '15px' }}
+            onClick={() => {
+              setIndexActuel(0); setScore(0); setTermine(false);
+              setValide(false); setReponseSelectionnee(null);
+              setExplicationIA(''); setCle(k => k + 1);
+            }}
+            style={{ padding: '12px 24px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: '700' }}
           >
             Recommencer
           </button>
           <button
             onClick={onRetourDashboard}
-            style={{ padding: '12px 24px', background: '#fff', color: '#333', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', fontSize: '15px' }}
+            style={{ padding: '12px 24px', background: '#fff', color: '#333', border: '1px solid #ddd', borderRadius: '10px', cursor: 'pointer', fontSize: '15px' }}
           >
             Tableau de bord
           </button>
@@ -120,47 +141,62 @@ function Quiz({ section, utilisateur, onRetourDashboard }) {
   const q = questions[indexActuel];
 
   return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px' }}>
+    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
-          <button onClick={onRetourDashboard} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '13px', padding: 0, marginBottom: '4px' }}>
+          <button onClick={onRetourDashboard} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '13px', padding: 0, marginBottom: '4px', display: 'block' }}>
             ← Tableau de bord
           </button>
-          <div style={{ fontSize: '14px', color: '#888' }}>Question {indexActuel + 1} / {questions.length}</div>
+          <div style={{ fontSize: '13px', color: '#888' }}>
+            Question {indexActuel + 1} / {questions.length}
+          </div>
         </div>
         <Timer key={cle} duree={120} onExpire={validerReponse} />
       </div>
 
       <div style={{ height: '4px', background: '#eee', borderRadius: '4px', marginBottom: '20px' }}>
-        <div style={{ height: '100%', width: `${((indexActuel + 1) / questions.length) * 100}%`, background: '#1D9E75', borderRadius: '4px', transition: 'width 0.4s' }} />
+        <div style={{
+          height: '100%',
+          width: ((indexActuel + 1) / questions.length * 100) + '%',
+          background: '#1D9E75', borderRadius: '4px', transition: 'width 0.4s'
+        }} />
       </div>
 
-      <Question
-        question={q}
-        onReponse={setReponseSelectionnee}
-        reponseSelectionnee={reponseSelectionnee}
-        valide={valide}
-      />
+      <div style={{ background: '#fff', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '16px' }}>
+        <Question
+          question={q}
+          onReponse={setReponseSelectionnee}
+          reponseSelectionnee={reponseSelectionnee}
+          valide={valide}
+        />
+      </div>
 
       {valide && (
-        <div style={{ marginTop: '16px', background: '#E6F1FB', border: '1px solid #B5D4F4', borderRadius: '8px', padding: '14px' }}>
-          <p style={{ fontSize: '12px', color: '#185FA5', fontWeight: '500', marginBottom: '6px' }}>
-            💡 Explication personnalisée par IA
+        <div style={{ background: '#E6F1FB', border: '1px solid #B5D4F4', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '12px', color: '#185FA5', fontWeight: '600', marginBottom: '6px' }}>
+            💡 {utilisateur?.abonnement === 'pro' ? 'Explication personnalisée par IA' : 'Explication'}
           </p>
           {chargementIA ? (
             <p style={{ fontSize: '13px', color: '#378ADD' }}>L'IA analyse votre réponse...</p>
           ) : (
-            <p style={{ fontSize: '13px', color: '#0C447C', lineHeight: '1.6' }}>{explicationIA}</p>
+            <p style={{ fontSize: '13px', color: '#0C447C', lineHeight: '1.7' }}>{explicationIA}</p>
           )}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+      <div style={{ display: 'flex', gap: '10px' }}>
         {!valide && (
           <button
             onClick={validerReponse}
             disabled={reponseSelectionnee === null}
-            style={{ padding: '10px 20px', background: reponseSelectionnee === null ? '#ccc' : '#1D9E75', color: '#fff', border: 'none', borderRadius: '8px', cursor: reponseSelectionnee === null ? 'default' : 'pointer', fontSize: '14px' }}
+            style={{
+              flex: 1, padding: '12px',
+              background: reponseSelectionnee === null ? '#e5e7eb' : 'linear-gradient(135deg, #1D9E75, #0F6E56)',
+              color: reponseSelectionnee === null ? '#9ca3af' : '#fff',
+              border: 'none', borderRadius: '10px',
+              cursor: reponseSelectionnee === null ? 'default' : 'pointer',
+              fontSize: '14px', fontWeight: '700'
+            }}
           >
             Valider
           </button>
@@ -168,7 +204,7 @@ function Quiz({ section, utilisateur, onRetourDashboard }) {
         {valide && (
           <button
             onClick={questionSuivante}
-            style={{ padding: '10px 20px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+            style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}
           >
             {indexActuel + 1 >= questions.length ? 'Voir mon score' : 'Question suivante →'}
           </button>
