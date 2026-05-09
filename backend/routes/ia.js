@@ -17,12 +17,24 @@ const explicationsSecours = {
 
 function verifierToken(req, res, next) {
   const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ message: 'Token manquant' });
+   console.log('=== VERIFICATION TOKEN ===');
+  console.log('Header Authorization:', auth);
+  console.log('SECRET utilisé:', SECRET);
+  
+   if (!auth) {
+    console.log('❌ Pas de token');
+    return res.status(401).json({ message: 'Token manquant' });
+  }
+  
   try {
-    req.utilisateur = jwt.verify(auth.replace('Bearer ', ''), SECRET);
+    const token = auth.replace('Bearer ', '');
+    console.log('Token extrait:', token.substring(0, 20) + '...');
+    req.utilisateur = jwt.verify(token, SECRET);
+    console.log('✅ Token valide, user ID:', req.utilisateur.id);
     next();
-  } catch {
-    res.status(401).json({ message: 'Token invalide' });
+  } catch (err) {
+    console.log('❌ Token invalide:', err.message);
+    res.status(401).json({ message: 'Token invalide: ' + err.message });
   }
 }
 
