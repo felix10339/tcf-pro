@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
+
 function PaiementSucces({ onMisAJour }) {
   const [searchParams] = useSearchParams();
   const [statut, setStatut] = useState('verification');
@@ -21,18 +22,16 @@ function PaiementSucces({ onMisAJour }) {
         setTentatives(essai + 1);
 
         const res = await axios.get(
-          `${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/paiement/verifier-session/${sessionId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          API_URL + '/api/paiement/verifier-session/' + sessionId,
+          { headers: { Authorization: 'Bearer ' + token } }
         );
 
         if (res.data.succes) {
-          // Mettre à jour token et utilisateur immédiatement
           localStorage.setItem('token', res.data.token);
           localStorage.setItem('utilisateur', JSON.stringify(res.data.utilisateur));
           onMisAJour(res.data.utilisateur);
           setStatut('succes');
         } else if (essai < 5) {
-          // Réessayer jusqu'à 5 fois avec délai croissant
           setTimeout(() => verifier(essai + 1), 2000);
         } else {
           setStatut('erreur');
@@ -55,7 +54,9 @@ function PaiementSucces({ onMisAJour }) {
       <div style={{ textAlign: 'center', maxWidth: '400px', padding: '20px' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
         <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Activation de votre abonnement...</h2>
-        <p style={{ color: '#888', marginBottom: '16px' }}>Vérification du paiement en cours {tentatives > 0 ? `(tentative ${tentatives})` : ''}</p>
+        <p style={{ color: '#888', marginBottom: '16px' }}>
+          Vérification du paiement {tentatives > 0 ? '(tentative ' + tentatives + ')' : ''}
+        </p>
         <div style={{ height: '4px', background: '#eee', borderRadius: '4px', overflow: 'hidden' }}>
           <div style={{ height: '100%', background: '#1D9E75', borderRadius: '4px', animation: 'loading 1.5s ease-in-out infinite', width: '60%' }} />
         </div>
@@ -70,16 +71,16 @@ function PaiementSucces({ onMisAJour }) {
         <div style={{ width: '80px', height: '80px', background: '#E1F5EE', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', margin: '0 auto 20px' }}>🎉</div>
         <h2 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '8px', color: '#0F6E56' }}>Bienvenue dans TCFPro !</h2>
         <p style={{ fontSize: '15px', color: '#666', marginBottom: '28px', lineHeight: '1.7' }}>
-          Votre paiement a été confirmé et votre compte Pro est maintenant actif. Toutes les fonctionnalités sont débloquées !
+          Votre paiement a été confirmé et votre compte Pro est maintenant actif !
         </p>
         <div style={{ background: '#E1F5EE', borderRadius: '14px', padding: '18px', marginBottom: '28px', textAlign: 'left' }}>
           <p style={{ fontSize: '13px', fontWeight: '700', color: '#0F6E56', marginBottom: '10px' }}>✅ Fonctionnalités débloquées :</p>
           {[
-            'Compréhension écrite et orale — illimitées',
+            'Compréhension écrite et orale illimitées',
             'Expression écrite avec correction IA',
             'Expression orale avec correction IA',
             'Simulateur d\'examen complet (4 épreuves)',
-            'Explications IA personnalisées après chaque réponse'
+            'Explications IA personnalisées'
           ].map((f, i) => (
             <div key={i} style={{ fontSize: '13px', color: '#085041', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ color: '#1D9E75', fontWeight: '700' }}>✓</span> {f}
@@ -87,7 +88,7 @@ function PaiementSucces({ onMisAJour }) {
           ))}
         </div>
         <button onClick={() => window.location.href = '/'}
-          style={{ width: '100%', padding: '15px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', fontWeight: '700', boxShadow: '0 4px 15px rgba(29,158,117,0.35)' }}>
+          style={{ width: '100%', padding: '15px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}>
           Commencer à s'entraîner →
         </button>
       </div>
@@ -100,7 +101,7 @@ function PaiementSucces({ onMisAJour }) {
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
         <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '8px' }}>Vérification en attente</h2>
         <p style={{ color: '#666', marginBottom: '8px', lineHeight: '1.6' }}>
-          Votre paiement a bien été reçu par Stripe mais la synchronisation prend un peu plus de temps.
+          Votre paiement a bien été reçu mais la synchronisation prend un peu plus de temps.
         </p>
         <p style={{ color: '#888', fontSize: '13px', marginBottom: '24px' }}>
           Reconnectez-vous dans quelques secondes — votre compte Pro sera activé.
