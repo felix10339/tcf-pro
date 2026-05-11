@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
+
 function Tarifs({ utilisateur, onRetour }) {
   const [planChoisi, setPlanChoisi] = useState('mensuel');
   const [chargement, setChargement] = useState(false);
@@ -33,12 +34,13 @@ function Tarifs({ utilisateur, onRetour }) {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/paiement/creer-session`,
+        API_URL + '/api/paiement/creer-session',
         { plan: planChoisi },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: 'Bearer ' + token } }
       );
       window.location.href = res.data.url;
     } catch (err) {
+      console.error('Erreur Stripe:', err);
       alert('Erreur lors de la création de la session de paiement.');
     } finally {
       setChargement(false);
@@ -64,7 +66,7 @@ function Tarifs({ utilisateur, onRetour }) {
       <div style={{ maxWidth: '900px', margin: '-48px auto 0', padding: '0 20px 40px' }}>
 
         {/* Plans */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '28px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '28px' }}>
           {plans.map(plan => (
             <div key={plan.id} onClick={() => setPlanChoisi(plan.id)}
               style={{ background: '#fff', borderRadius: '16px', padding: '24px', cursor: 'pointer', border: planChoisi === plan.id ? '2px solid #1D9E75' : '2px solid transparent', boxShadow: planChoisi === plan.id ? '0 8px 30px rgba(29,158,117,0.15)' : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', textAlign: 'center', position: 'relative' }}>
@@ -112,7 +114,7 @@ function Tarifs({ utilisateur, onRetour }) {
           <>
             <button onClick={redirecterVersStripe} disabled={chargement}
               style={{ width: '100%', padding: '16px', background: chargement ? '#ccc' : 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: chargement ? 'default' : 'pointer', fontSize: '16px', fontWeight: '800', boxShadow: '0 4px 20px rgba(29,158,117,0.35)' }}>
-              {chargement ? '⏳ Redirection vers le paiement...' : `Commencer avec le plan ${planSelectionne?.label} — ${planSelectionne?.prix} ${planSelectionne?.devise} →`}
+              {chargement ? '⏳ Redirection vers le paiement...' : 'Commencer avec le plan ' + planSelectionne?.label + ' — ' + planSelectionne?.prix + ' ' + planSelectionne?.devise + ' →'}
             </button>
             <p style={{ textAlign: 'center', fontSize: '12px', color: '#aaa', marginTop: '12px' }}>
               🔒 Paiement sécurisé par Stripe · Annulation à tout moment · Satisfait ou remboursé 7 jours
