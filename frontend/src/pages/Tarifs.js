@@ -1,36 +1,40 @@
 import { useState } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
+import Icone from '../components/Icone';
+
+const PLANS = [
+  { id: 'mensuel', label: 'Mensuel', prix: '9,99', periode: 'par mois', parMois: null, tag: null, economie: null },
+  { id: 'trimestriel', label: 'Trimestriel', prix: '24,99', periode: 'tous les 3 mois', parMois: '8,33', tag: 'Populaire', economie: 'Économisez 17 %' },
+  { id: 'annuel', label: 'Annuel', prix: '79,99', periode: 'par an', parMois: '6,67', tag: 'Meilleur prix', economie: 'Économisez 33 %' }
+];
+
+// Reflète ce que l'application fait réellement aujourd'hui.
+const COMPARAISON = [
+  { label: 'Compréhension écrite (questions de A1 à C2)', gratuit: true, pro: true },
+  { label: 'Compréhension orale avec audio', gratuit: true, pro: true },
+  { label: 'Explication personnalisée par IA après chaque réponse', gratuit: false, pro: true },
+  { label: 'Expression écrite : 3 tâches corrigées par IA, note /20', gratuit: false, pro: true },
+  { label: 'Expression orale : 3 tâches corrigées par IA, note /20', gratuit: false, pro: true },
+  { label: 'Examen blanc complet au format officiel', gratuit: false, pro: true },
+  { label: 'Résultat converti en NCLC', gratuit: false, pro: true }
+];
+
+const Coche = ({ oui }) => oui
+  ? <Icone nom="coche" taille={18} style={{ color: 'var(--succes)' }} titre="Inclus" />
+  : <span className="texte-3" aria-label="Non inclus">—</span>;
 
 function Tarifs({ utilisateur, onRetour }) {
-  const [planChoisi, setPlanChoisi] = useState('mensuel');
+  const [planChoisi, setPlanChoisi] = useState('trimestriel');
   const [chargement, setChargement] = useState(false);
+  const [erreur, setErreur] = useState('');
 
   const estPro = utilisateur?.abonnement === 'pro';
-
-  const plans = [
-    { id: 'mensuel', label: 'Mensuel', prix: '9.99', devise: 'CAD', periode: 'mois', tag: null, economie: null },
-    { id: 'trimestriel', label: 'Trimestriel', prix: '24.99', devise: 'CAD', periode: '3 mois', tag: 'Populaire', economie: 'Économisez 17%' },
-    { id: 'annuel', label: 'Annuel', prix: '79.99', devise: 'CAD', periode: 'an', tag: 'Meilleur prix', economie: 'Économisez 33%' }
-  ];
-
-  const fonctionnalites = [
-    { label: 'Questions illimitées', gratuit: '20/jour', pro: '✅ Illimité' },
-    { label: 'Compréhension écrite', gratuit: '✅', pro: '✅' },
-    { label: 'Compréhension orale (audio)', gratuit: '✅', pro: '✅' },
-    { label: 'Expression écrite + correction IA', gratuit: '3/mois', pro: '✅ Illimité' },
-    { label: 'Expression orale + correction IA', gratuit: '3/mois', pro: '✅ Illimité' },
-    { label: 'Simulateur d\'examen complet', gratuit: '1/semaine', pro: '✅ Illimité' },
-    { label: 'Générateur de questions IA', gratuit: '❌', pro: '✅ Inclus' },
-    { label: 'Explications IA après chaque réponse', gratuit: '❌', pro: '✅ Inclus' },
-    { label: 'Suivi de progression détaillé', gratuit: '❌', pro: '✅ Inclus' },
-    { label: 'Support prioritaire', gratuit: '❌', pro: '✅ Inclus' }
-  ];
-
-  const planSelectionne = plans.find(p => p.id === planChoisi);
+  const plan = PLANS.find(p => p.id === planChoisi);
 
   const redirecterVersStripe = async () => {
     setChargement(true);
+    setErreur('');
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
@@ -41,87 +45,87 @@ function Tarifs({ utilisateur, onRetour }) {
       window.location.href = res.data.url;
     } catch (err) {
       console.error('Erreur Stripe:', err);
-      alert('Erreur lors de la création de la session de paiement.');
-    } finally {
+      setErreur('Impossible d\'ouvrir la page de paiement. Réessayez dans quelques instants.');
       setChargement(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-      <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '40px 32px 80px', color: '#fff', textAlign: 'center', position: 'relative' }}>
-        <button onClick={onRetour} style={{ position: 'absolute', left: '28px', top: '20px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '14px' }}>← Retour</button>
-        <div style={{ fontSize: '40px', marginBottom: '12px' }}>🚀</div>
-        <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Passez à TCFPro</h2>
-        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '15px', maxWidth: '480px', margin: '0 auto' }}>
-          Débloquez toutes les fonctionnalités et maximisez vos chances de réussite au TCF
-        </p>
-        {estPro && (
-          <div style={{ display: 'inline-block', marginTop: '16px', background: '#1D9E75', borderRadius: '20px', padding: '6px 20px', fontSize: '13px', fontWeight: '700' }}>
-            ✅ Vous êtes déjà abonné Pro
-          </div>
-        )}
-      </div>
+    <div>
+      <header className="entete-page centre">
+        <div className="conteneur-etroit" style={{ position: 'relative', zIndex: 1 }}>
+          <button className="btn btn-lien btn-petit" onClick={onRetour} style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 12 }}>
+            <Icone nom="retour" taille={16} /> Retour
+          </button>
+          <h1 className="titre-1" style={{ marginBottom: 10 }}>Passez à TCF Pro</h1>
+          <p style={{ opacity: 0.75, maxWidth: 480, margin: '0 auto' }}>Examens blancs complets, corrections par IA et résultats en NCLC pour arriver prêt au TCF Canada.</p>
+          {estPro && <span className="badge badge-succes" style={{ marginTop: 16 }}><Icone nom="coche" taille={13} /> Vous êtes déjà membre Pro</span>}
+        </div>
+      </header>
 
-      <div style={{ maxWidth: '900px', margin: '-48px auto 0', padding: '0 20px 40px' }}>
-
-        {/* Plans */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '28px' }}>
-          {plans.map(plan => (
-            <div key={plan.id} onClick={() => setPlanChoisi(plan.id)}
-              style={{ background: '#fff', borderRadius: '16px', padding: '24px', cursor: 'pointer', border: planChoisi === plan.id ? '2px solid #1D9E75' : '2px solid transparent', boxShadow: planChoisi === plan.id ? '0 8px 30px rgba(29,158,117,0.15)' : '0 2px 12px rgba(0,0,0,0.06)', transition: 'all 0.2s', textAlign: 'center', position: 'relative' }}>
-              {plan.tag && (
-                <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: plan.tag === 'Meilleur prix' ? '#EF9F27' : '#1D9E75', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '3px 12px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
-                  {plan.tag}
+      <main className="conteneur chevauche" style={{ maxWidth: 960, paddingBottom: 56 }}>
+        {/* Forfaits */}
+        <div className="grille grille-3" role="radiogroup" aria-label="Choix du forfait" style={{ marginBottom: 24, alignItems: 'stretch' }}>
+          {PLANS.map(p => {
+            const choisi = planChoisi === p.id;
+            return (
+              <button key={p.id} role="radio" aria-checked={choisi} onClick={() => setPlanChoisi(p.id)} className="carte carte-cliquable"
+                style={{ padding: 24, position: 'relative', textAlign: 'left', border: choisi ? '2px solid var(--action)' : '1px solid var(--bordure)', boxShadow: choisi ? 'var(--ombre-2)' : 'var(--ombre-1)' }}>
+                <div className="ligne entre" style={{ marginBottom: 14, minHeight: 24 }}>
+                  <span className="titre-3">{p.label}</span>
+                  {p.tag && <span className={`badge ${p.tag === 'Populaire' ? 'badge-action' : 'badge-nuit'}`}>{p.tag}</span>}
                 </div>
-              )}
-              <div style={{ fontSize: '15px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>{plan.label}</div>
-              <div style={{ fontSize: '36px', fontWeight: '800', color: planChoisi === plan.id ? '#1D9E75' : '#1a1a2e', lineHeight: 1 }}>
-                {plan.prix}<span style={{ fontSize: '14px', fontWeight: '500', color: '#aaa' }}> {plan.devise}</span>
-              </div>
-              <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px', marginBottom: '12px' }}>par {plan.periode}</div>
-              {plan.economie && (
-                <div style={{ background: '#E1F5EE', color: '#0F6E56', fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '20px', display: 'inline-block' }}>
-                  {plan.economie}
+                <div className="ligne gap-1" style={{ alignItems: 'baseline' }}>
+                  <span className="chiffres" style={{ fontFamily: 'var(--police-titre)', fontSize: '2.4rem', fontWeight: 700, lineHeight: 1 }}>{p.prix} $</span>
+                  <span className="petit texte-3">CAD</span>
                 </div>
-              )}
-              {planChoisi === plan.id && <div style={{ marginTop: '12px', color: '#1D9E75', fontSize: '18px' }}>✓</div>}
-            </div>
-          ))}
+                <div className="petit texte-3" style={{ marginTop: 4, marginBottom: 14 }}>{p.periode}{p.parMois ? ` · soit ${p.parMois} $/mois` : ''}</div>
+                <div className="ligne entre">
+                  {p.economie ? <span className="badge badge-succes">{p.economie}</span> : <span />}
+                  <span aria-hidden="true" style={{ width: 22, height: 22, borderRadius: '50%', border: choisi ? '6px solid var(--action)' : '2px solid var(--bordure-forte)', transition: 'all var(--anim)' }} />
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Tableau comparatif */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', textAlign: 'center' }}>Comparer les plans</h3>
-          <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #eee' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
-              <div style={{ padding: '12px 16px', background: '#f9fafb', fontWeight: '700', fontSize: '13px', borderBottom: '1px solid #eee' }}>Fonctionnalité</div>
-              <div style={{ padding: '12px 16px', background: '#f9fafb', fontWeight: '700', fontSize: '13px', textAlign: 'center', borderBottom: '1px solid #eee', color: '#888' }}>Gratuit</div>
-              <div style={{ padding: '12px 16px', background: '#E1F5EE', fontWeight: '700', fontSize: '13px', textAlign: 'center', borderBottom: '1px solid #eee', color: '#0F6E56' }}>Pro ✨</div>
-              {fonctionnalites.map((f, i) => (
-                <div key={i} style={{ display: 'contents' }}>
-                  <div style={{ padding: '11px 16px', fontSize: '13px', color: '#444', borderBottom: i < fonctionnalites.length - 1 ? '1px solid #f5f5f5' : 'none', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>{f.label}</div>
-                  <div style={{ padding: '11px 16px', fontSize: '13px', textAlign: 'center', color: '#888', borderBottom: i < fonctionnalites.length - 1 ? '1px solid #f5f5f5' : 'none', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>{f.gratuit}</div>
-                  <div style={{ padding: '11px 16px', fontSize: '13px', textAlign: 'center', color: '#0F6E56', fontWeight: '500', borderBottom: i < fonctionnalites.length - 1 ? '1px solid #f5f5f5' : 'none', background: i % 2 === 0 ? '#F0FBF7' : '#E8F8F2' }}>{f.pro}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
         {!estPro && (
-          <>
-            <button onClick={redirecterVersStripe} disabled={chargement}
-              style={{ width: '100%', padding: '16px', background: chargement ? '#ccc' : 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: chargement ? 'default' : 'pointer', fontSize: '16px', fontWeight: '800', boxShadow: '0 4px 20px rgba(29,158,117,0.35)' }}>
-              {chargement ? '⏳ Redirection vers le paiement...' : 'Commencer avec le plan ' + planSelectionne?.label + ' — ' + planSelectionne?.prix + ' ' + planSelectionne?.devise + ' →'}
+          <div className="carte" style={{ marginBottom: 24, padding: 'clamp(20px, 3vw, 28px)' }}>
+            <button className="btn btn-primaire btn-grand btn-plein" onClick={redirecterVersStripe} disabled={chargement}>
+              {chargement ? 'Redirection vers le paiement…' : <>Choisir le forfait {plan.label.toLowerCase()} · {plan.prix} $ <Icone nom="fleche" taille={18} /></>}
             </button>
-            <p style={{ textAlign: 'center', fontSize: '12px', color: '#aaa', marginTop: '12px' }}>
-              🔒 Paiement sécurisé par Stripe · Annulation à tout moment · Satisfait ou remboursé 7 jours
-            </p>
-          </>
+            {erreur && <div className="message-erreur" role="alert" style={{ marginTop: 12 }}>{erreur}</div>}
+            <div className="ligne envelopper gap-3 tres-petit texte-3" style={{ justifyContent: 'center', marginTop: 14 }}>
+              <span className="ligne gap-1"><Icone nom="bouclier" taille={14} /> Paiement sécurisé par Stripe</span>
+              <span className="ligne gap-1"><Icone nom="croix" taille={14} /> Annulable à tout moment</span>
+              <span className="ligne gap-1"><Icone nom="carte" taille={14} /> Prix en dollars canadiens</span>
+            </div>
+          </div>
         )}
-      </div>
+
+        {/* Comparatif */}
+        <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
+          <h2 className="titre-2" style={{ padding: '20px 24px', borderBottom: '1px solid var(--bordure)' }}>Gratuit ou Pro ?</h2>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr className="petit texte-3" style={{ textAlign: 'left' }}>
+                <th style={{ padding: '12px 24px', fontWeight: 600 }}>Fonctionnalité</th>
+                <th style={{ padding: '12px 12px', fontWeight: 600, textAlign: 'center', width: 90 }}>Gratuit</th>
+                <th style={{ padding: '12px 24px 12px 12px', fontWeight: 700, textAlign: 'center', width: 90, color: 'var(--action)' }}>Pro</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARAISON.map(f => (
+                <tr key={f.label} style={{ borderTop: '1px solid var(--bordure)' }}>
+                  <td className="petit" style={{ padding: '13px 24px' }}>{f.label}</td>
+                  <td style={{ padding: '13px 12px', textAlign: 'center' }}><Coche oui={f.gratuit} /></td>
+                  <td style={{ padding: '13px 24px 13px 12px', textAlign: 'center', background: 'rgba(29,78,216,0.04)' }}><Coche oui={f.pro} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
     </div>
   );
 }

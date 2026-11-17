@@ -8,6 +8,10 @@ const paiementRoute = require('./routes/paiement');
 
 const app = express();
 
+// Derrière le proxy de l'hébergeur (Railway) : req.ip = vraie adresse du visiteur.
+// Indispensable pour limiter la démo gratuite à une correction par visiteur.
+app.set('trust proxy', 1);
+
 // CORS manuel — avant tout le reste
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -21,7 +25,7 @@ app.use((req, res, next) => {
 
 // Webhook Stripe avant express.json()
 app.use('/api/paiement/webhook', express.raw({ type: 'application/json' }));
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 app.use('/api/questions', questionsRoute);
 app.use('/api/ia', iaRoute);

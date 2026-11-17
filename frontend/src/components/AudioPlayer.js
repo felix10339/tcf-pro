@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import Icone from './Icone';
 
 function AudioPlayer({ texte }) {
   const [lecture, setLecture] = useState(false);
@@ -22,12 +23,13 @@ function AudioPlayer({ texte }) {
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(texte);
-    utterance.lang = 'fr-FR';
+    utterance.lang = 'fr-CA';
     utterance.rate = 0.9;
     utterance.pitch = 1;
 
     const voix = window.speechSynthesis.getVoices();
-    const voixFR = voix.find(v => v.lang.startsWith('fr'));
+    // Voix canadienne en priorité, sinon n'importe quelle voix française
+    const voixFR = voix.find(v => v.lang === 'fr-CA') || voix.find(v => v.lang.startsWith('fr'));
     if (voixFR) utterance.voice = voixFR;
 
     utterance.onstart = () => { setLecture(true); setTermine(false); setProgression(0); };
@@ -51,70 +53,27 @@ function AudioPlayer({ texte }) {
   };
 
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, #1a3a4a, #203a43)',
-      borderRadius: '14px', padding: '20px',
-      marginBottom: '20px', color: '#fff'
-    }}>
-      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-        🎧 Compréhension Orale — Écoutez l'enregistrement
-      </div>
-
-      {/* Barre de progression */}
-      <div style={{ height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '4px', marginBottom: '16px', overflow: 'hidden' }}>
-        <div style={{
-          height: '100%', width: `${progression}%`,
-          background: '#1D9E75', borderRadius: '4px',
-          transition: 'width 0.3s'
-        }} />
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <button
-          onClick={termine ? rejouer : lire}
-          style={{
-            width: '48px', height: '48px',
-            background: lecture ? '#E24B4A' : '#1D9E75',
-            border: 'none', borderRadius: '50%',
-            cursor: 'pointer', fontSize: '18px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 4px 15px ${lecture ? 'rgba(226,75,74,0.4)' : 'rgba(29,158,117,0.4)'}`,
-            transition: 'all 0.2s'
-          }}
-        >
-          {termine ? '🔁' : lecture ? '⏹' : '▶️'}
+    <div style={{ background: 'var(--nuit)', borderRadius: 'var(--rayon)', padding: 18, marginBottom: 16, color: '#fff' }}>
+      <div className="ligne gap-3">
+        <button onClick={termine ? rejouer : lire} aria-label={termine ? 'Réécouter' : lecture ? 'Arrêter' : 'Écouter'}
+          style={{ width: 48, height: 48, flexShrink: 0, borderRadius: '50%', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            background: lecture ? '#fff' : 'var(--action)', color: lecture ? 'var(--nuit)' : '#fff', boxShadow: '0 6px 18px rgba(0,0,0,0.25)' }}>
+          {lecture
+            ? <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+            : termine
+              ? <Icone nom="retour" taille={18} />
+              : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ marginLeft: 3 }}><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z" /></svg>}
         </button>
-
-        <div>
-          <div style={{ fontSize: '14px', fontWeight: '600' }}>
-            {termine ? 'Terminé — Réécoutez si nécessaire' : lecture ? 'Lecture en cours...' : 'Appuyez pour écouter'}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="ligne entre gap-2" style={{ marginBottom: 8 }}>
+            <span className="petit gras">{termine ? 'Écoute terminée' : lecture ? 'Lecture en cours…' : 'Écoutez l\'enregistrement'}</span>
+            <span className="tres-petit" style={{ opacity: 0.6 }}>{termine ? 'Vous pouvez réécouter' : lecture ? 'En cours' : 'Prêt'}</span>
           </div>
-          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
-            {lecture ? '🔴 En cours' : termine ? '✅ Terminé' : '⚪ Prêt'}
+          <div style={{ height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progression}%`, background: '#fff', borderRadius: 4, transition: 'width 0.3s' }} />
           </div>
         </div>
-
-        {lecture && (
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px', alignItems: 'center' }}>
-            {[1,2,3,4,5].map(i => (
-              <div key={i} style={{
-                width: '3px',
-                height: `${8 + Math.random() * 16}px`,
-                background: '#1D9E75',
-                borderRadius: '3px',
-                animation: `pulse ${0.4 + i * 0.1}s ease-in-out infinite alternate`
-              }} />
-            ))}
-          </div>
-        )}
       </div>
-
-      <style>{`
-        @keyframes pulse {
-          from { transform: scaleY(0.5); opacity: 0.5; }
-          to { transform: scaleY(1); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }

@@ -13,6 +13,22 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
   const [message, setMessage] = useState('');
   const [chargement, setChargement] = useState(false);
   const estPro = utilisateur?.abonnement === 'pro';
+  const [chargementPortail, setChargementPortail] = useState(false);
+  const [erreurPortail, setErreurPortail] = useState('');
+
+  // Ouvre le portail client Stripe (carte, factures, changement de forfait, annulation)
+  const ouvrirPortail = async () => {
+    setChargementPortail(true);
+    setErreurPortail('');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${API_URL}/api/paiement/portail`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      window.location.href = res.data.url;
+    } catch (err) {
+      setErreurPortail(err.response?.data?.message || 'Impossible d\'ouvrir la gestion de l\'abonnement.');
+      setChargementPortail(false);
+    }
+  };
 
   useEffect(() => {
     const s = localStorage.getItem(`stats-${utilisateur.id}`);
@@ -288,7 +304,7 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
                     </div>
                     {estPro && utilisateur.dateFinAbonnement && (
                       <div style={{ fontSize: '12px', color: '#4ECDA4', marginTop: '6px', fontWeight: '600' }}>
-                        ✅ Actif jusqu'au {new Date(utilisateur.dateFinAbonnement).toLocaleDateString('fr-FR')}
+                        ✅ Période en cours jusqu'au {new Date(utilisateur.dateFinAbonnement).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </div>
                     )}
                   </div>
@@ -299,6 +315,17 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
                 <button onClick={onTarifs} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: '700', boxShadow: '0 4px 14px rgba(29,158,117,0.3)' }}>
                   ⭐ Passer à la version Pro →
                 </button>
+              )}
+              {estPro && (
+                <>
+                  <button onClick={ouvrirPortail} disabled={chargementPortail} className="btn btn-nuit btn-plein" style={{ marginBottom: '8px' }}>
+                    {chargementPortail ? 'Ouverture…' : 'Gérer mon abonnement'}
+                  </button>
+                  <p style={{ fontSize: '12px', color: '#6b7280', textAlign: 'center', marginBottom: '16px' }}>
+                    Carte bancaire, factures, changement de forfait ou annulation, sur la page sécurisée de Stripe.
+                  </p>
+                  {erreurPortail && <div className="message-erreur" style={{ marginBottom: '16px' }}>{erreurPortail}</div>}
+                </>
               )}
               {estPro && (
                 <div style={{ background: '#E1F5EE', borderRadius: '10px', padding: '14px 16px' }}>

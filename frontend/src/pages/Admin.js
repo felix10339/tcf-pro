@@ -12,48 +12,48 @@ function Admin({ onRetour }) {
 
   const themesParSection = {
     'comprehension-ecrite': [
-      'La littérature française du XXe siècle',
-      'Le système éducatif français',
-      'La gastronomie et la culture culinaire française',
-      'L\'histoire de la langue française',
-      'Les mouvements artistiques francophones',
-      'La politique et la société française',
-      'L\'environnement et l\'écologie en France',
-      'Les médias et la presse francophone',
-      'La mode et le luxe français',
-      'Les sciences et les découvertes françaises'
+      'Chercher un logement (annonces, bail, relations avec le propriétaire)',
+      'Le marché du travail et la recherche d\'emploi au Canada',
+      'Le système de santé et l\'assurance maladie provinciale',
+      'L\'école, les garderies et l\'éducation des enfants',
+      'Les services gouvernementaux (Service Canada, NAS, impôts, IRCC)',
+      'L\'hiver canadien, le climat et l\'environnement',
+      'La francophonie canadienne (Québec, Acadie, Ontario, Ouest)',
+      'La vie de quartier, le bénévolat et la vie communautaire',
+      'Les transports en commun et la mobilité',
+      'Société canadienne : immigration, multiculturalisme, Premières Nations'
     ],
     'comprehension-orale': [
-      'Dialogues du quotidien en français',
-      'Annonces et messages publics',
-      'Bulletins d\'information',
-      'Conversations téléphoniques formelles',
-      'Émissions de radio françaises',
-      'Interviews et reportages',
-      'Messages vocaux professionnels',
-      'Annonces dans les transports',
-      'Dialogues dans les commerces',
-      'Conversations entre amis'
+      'Messages vocaux (garderie, clinique, employeur, propriétaire)',
+      'Annonces publiques (métro, autobus, aéroport, épicerie)',
+      'Dialogues au guichet (Service Canada, banque, pharmacie)',
+      'Entrevues d\'embauche et conversations au travail',
+      'Bulletins de circulation et météo hivernale',
+      'Émissions de radio canadiennes (actualité, société)',
+      'Témoignages de nouveaux arrivants',
+      'Conversations entre voisins et amis',
+      'Reportages sur la vie en région',
+      'Débats et chroniques d\'opinion'
     ],
     'expression-ecrite': [
-      'Rédiger une lettre formelle de réclamation',
-      'Écrire un article d\'opinion sur les réseaux sociaux',
-      'Rédiger un essai sur l\'éducation',
-      'Lettre de motivation professionnelle',
-      'Article sur l\'environnement et le développement durable',
-      'Opinion sur la place de la culture dans la société',
-      'Rédaction sur les nouvelles technologies',
-      'Essai sur la jeunesse et l\'avenir'
+      'Courriel à un propriétaire ou un voisin',
+      'Message à un employeur ou un collègue',
+      'Récit : mon premier hiver au Canada',
+      'Article sur une expérience de bénévolat',
+      'Argumentation : télétravail ou bureau ?',
+      'Argumentation : s\'installer en région ou en ville ?',
+      'Argumentation : transport en commun gratuit ?',
+      'Argumentation : reconnaissance des diplômes étrangers'
     ],
     'expression-orale': [
-      'Se présenter et parler de son parcours',
-      'Donner son avis sur l\'environnement',
-      'Raconter un souvenir marquant',
-      'Débattre sur l\'éducation',
-      'Décrire sa vie quotidienne',
-      'Parler de ses projets d\'avenir',
-      'Donner son opinion sur la technologie',
-      'Présenter un sujet culturel'
+      'Entretien : se présenter et son projet au Canada',
+      'Interaction : louer un appartement',
+      'Interaction : inscrire son enfant à l\'école',
+      'Interaction : s\'informer sur un emploi',
+      'Point de vue : emploi ou langue d\'abord ?',
+      'Point de vue : bilinguisme et langue minoritaire',
+      'Point de vue : réseaux sociaux et intégration',
+      'Point de vue : vivre en région'
     ]
   };
 
@@ -66,7 +66,7 @@ function Admin({ onRetour }) {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-         `${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/ia/generer-questions`,
+         `${API_URL}/api/ia/generer-questions`,
         { theme, section, niveau, nombre },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -135,10 +135,12 @@ function Admin({ onRetour }) {
               <label style={{ fontSize: '13px', fontWeight: '600', color: '#444', display: 'block', marginBottom: '8px' }}>Niveau</label>
               <select value={niveau} onChange={e => setNiveau(e.target.value)}
                 style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', background: '#fafafa', cursor: 'pointer' }}>
-                <option value="A2">A2 — Débutant</option>
+                <option value="A1">A1 — Découverte</option>
+                <option value="A2">A2 — Survie</option>
                 <option value="B1">B1 — Intermédiaire</option>
                 <option value="B2">B2 — Avancé</option>
-                <option value="C1">C1 — Supérieur</option>
+                <option value="C1">C1 — Autonome</option>
+                <option value="C2">C2 — Maîtrise</option>
               </select>
             </div>
             <div>

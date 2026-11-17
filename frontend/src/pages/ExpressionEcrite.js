@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import sujets from '../data/sujets-expression-ecrite';
 import API_URL from '../config';
+import { NIVEAU_COULEUR } from '../data/tcfCanada';
 
 function ExpressionEcrite({ onRetour }) {
   const [phase, setPhase] = useState('choix');
@@ -10,7 +11,7 @@ function ExpressionEcrite({ onRetour }) {
   const [chargement, setChargement] = useState(false);
   const [correction, setCorrection] = useState(null);
 
-  const niveauCouleur = { 'B1': '#1D9E75', 'B2': '#378ADD', 'C1': '#7F77DD' };
+  const niveauCouleur = NIVEAU_COULEUR;
 
   const compterMots = (texte) => texte.trim().split(/\s+/).filter(m => m.length > 0).length;
 
@@ -18,12 +19,18 @@ function ExpressionEcrite({ onRetour }) {
     if (!redaction.trim()) return;
     setChargement(true);
     try {
-      const res = await axios.post( `${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/ia/corriger-redaction`, {
+      const token = localStorage.getItem('token');
+      const sujetComplet = sujetChoisi.documents
+        ? `${sujetChoisi.sujet}\n${sujetChoisi.documents.join('\n')}`
+        : sujetChoisi.sujet;
+      const res = await axios.post(`${API_URL}/api/ia/corriger-redaction`, {
         tache: sujetChoisi.tache,
-        sujet: sujetChoisi.sujet,
+        sujet: sujetComplet,
         redaction,
-        niveau: sujetChoisi.niveau
-      });   
+        niveau: sujetChoisi.niveau,
+        minMots: sujetChoisi.minMots,
+        maxMots: sujetChoisi.maxMots
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setCorrection(res.data);
       setPhase('correction');
     } catch (err) {
@@ -77,6 +84,9 @@ function ExpressionEcrite({ onRetour }) {
           <button onClick={() => setPhase('choix')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '14px', marginBottom: '12px', padding: 0 }}>← Changer de sujet</button>
           <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', padding: '3px 10px', fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>{sujetChoisi.tache} — Niveau {sujetChoisi.niveau}</div>
           <p style={{ fontSize: '15px', lineHeight: '1.7', color: 'rgba(255,255,255,0.9)' }}>{sujetChoisi.sujet}</p>
+          {sujetChoisi.documents && sujetChoisi.documents.map((d, i) => (
+            <p key={i} style={{ fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.8)', background: 'rgba(255,255,255,0.08)', borderLeft: '3px solid #EF9F27', borderRadius: '6px', padding: '10px 12px', marginTop: '10px' }}>{d}</p>
+          ))}
         </div>
       </div>
       <div style={{ maxWidth: '760px', margin: '-32px auto 0', padding: '0 20px 40px' }}>

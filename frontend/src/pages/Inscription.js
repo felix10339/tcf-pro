@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
+import Logo from '../components/Logo';
+import Icone from '../components/Icone';
 
-function Inscription({ onConnecte }) {
+const ATOUTS = [
+  { icone: 'cible', texte: 'Examens blancs au format officiel du TCF Canada' },
+  { icone: 'graphique', texte: 'Résultats convertis en NCLC, épreuve par épreuve' },
+  { icone: 'etincelle', texte: 'Rédactions et oraux corrigés par l\'IA (Pro)' }
+];
+
+function Inscription({ onConnecte, onRetour }) {
   const [mode, setMode] = useState('connexion');
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
@@ -10,7 +18,10 @@ function Inscription({ onConnecte }) {
   const [erreur, setErreur] = useState('');
   const [chargement, setChargement] = useState(false);
 
-  const soumettre = async () => {
+  const changerMode = m => { setMode(m); setErreur(''); };
+
+  const soumettre = async (e) => {
+    e?.preventDefault();
     setErreur('');
     setChargement(true);
     try {
@@ -27,79 +38,94 @@ function Inscription({ onConnecte }) {
       localStorage.setItem('utilisateur', JSON.stringify(res.data.utilisateur));
       onConnecte(res.data.utilisateur);
     } catch (err) {
-      setErreur(err.response?.data?.message || 'Une erreur est survenue');
+      if (!err.response) {
+        // Aucune réponse : le serveur est arrêté, l'URL est fausse, ou la connexion est coupée.
+        setErreur('Impossible de joindre le serveur. Réessayez dans quelques instants.');
+      } else {
+        setErreur(err.response.data?.message || 'Une erreur est survenue');
+      }
     } finally {
       setChargement(false);
     }
   };
 
-  const handleKeyDown = (e) => { if (e.key === 'Enter') soumettre(); };
-
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-      <div style={{ width: '100%', maxWidth: '440px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', background: '#1D9E75', borderRadius: '16px', fontSize: '24px', marginBottom: '12px' }}>🇫🇷</div>
-          <h1 style={{ color: '#fff', fontSize: '26px', fontWeight: '800', marginBottom: '6px', letterSpacing: '-0.5px' }}>
-            TCF<span style={{ color: '#1D9E75' }}>Pro</span>
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '14px' }}>Préparez votre TCF avec l'intelligence artificielle</p>
+    <div style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))' }}>
+      {/* Panneau de marque (masqué sur mobile) */}
+      <aside className="desktop-only" style={{ background: 'var(--nuit)', color: '#fff', padding: '48px clamp(32px, 5vw, 64px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+        <Logo clair onClick={onRetour} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h2 className="titre-1" style={{ marginBottom: 28, maxWidth: 420 }}>
+            Sachez exactement où vous en êtes avant le jour J.
+          </h2>
+          <ul className="pile gap-3" style={{ listStyle: 'none' }}>
+            {ATOUTS.map(a => (
+              <li key={a.texte} className="ligne gap-2">
+                <span className="pastille-icone" style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.08)', color: '#fff' }}>
+                  <Icone nom={a.icone} taille={18} />
+                </span>
+                <span style={{ opacity: 0.9 }}>{a.texte}</span>
+              </li>
+            ))}
+          </ul>
         </div>
+        <p className="petit" style={{ opacity: 0.5 }}>Plateforme indépendante, non affiliée à IRCC.</p>
+        <div aria-hidden="true" style={{ position: 'absolute', right: -140, bottom: -140, width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.30), transparent 70%)' }} />
+      </aside>
 
-        <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
-          <div style={{ display: 'flex', background: '#f4f6f8', borderRadius: '10px', padding: '4px', marginBottom: '28px' }}>
-            {['connexion', 'inscription'].map(m => (
-              <button key={m} onClick={() => { setMode(m); setErreur(''); }}
-                style={{ flex: 1, padding: '9px', background: mode === m ? '#fff' : 'transparent', color: mode === m ? '#1a1a2e' : '#888', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: mode === m ? '600' : '400', boxShadow: mode === m ? '0 1px 4px rgba(0,0,0,0.1)' : 'none', transform: 'none' }}>
-                {m === 'connexion' ? 'Connexion' : 'Inscription'}
-              </button>
+      {/* Formulaire */}
+      <main style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '32px 20px', background: 'var(--fond)' }}>
+        <div style={{ width: '100%', maxWidth: 400 }}>
+          <div className="mobile-only" style={{ marginBottom: 32 }}><Logo onClick={onRetour} /></div>
+
+          <h1 className="titre-1" style={{ marginBottom: 6 }}>{mode === 'connexion' ? 'Bon retour !' : 'Créer votre compte'}</h1>
+          <p className="texte-2" style={{ marginBottom: 24 }}>
+            {mode === 'connexion' ? 'Connectez-vous pour reprendre votre préparation.' : 'Gratuit, sans carte bancaire.'}
+          </p>
+
+          <div className="segments" role="tablist" style={{ marginBottom: 24 }}>
+            {[['connexion', 'Connexion'], ['inscription', 'Inscription']].map(([m, label]) => (
+              <button key={m} type="button" role="tab" aria-selected={mode === m} className={`segment${mode === m ? ' actif' : ''}`} onClick={() => changerMode(m)}>{label}</button>
             ))}
           </div>
 
-          {mode === 'inscription' && (
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '13px', fontWeight: '600', color: '#444', display: 'block', marginBottom: '6px' }}>Nom complet</label>
-              <input type="text" value={nom} onChange={e => setNom(e.target.value)} onKeyDown={handleKeyDown} placeholder="Ex : Amara Diallo"
-                style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', background: '#fafafa', boxSizing: 'border-box' }} />
+          <form onSubmit={soumettre} className="pile gap-3" noValidate>
+            {mode === 'inscription' && (
+              <div className="champ-groupe">
+                <label className="champ-label" htmlFor="nom">Nom complet</label>
+                <input id="nom" className="champ" type="text" autoComplete="name" value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex. : Amara Diallo" />
+              </div>
+            )}
+            <div className="champ-groupe">
+              <label className="champ-label" htmlFor="email">Adresse courriel</label>
+              <input id="email" className="champ" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="vous@exemple.com" />
             </div>
-          )}
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#444', display: 'block', marginBottom: '6px' }}>Adresse email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={handleKeyDown} placeholder="votre@email.com"
-              style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', background: '#fafafa', boxSizing: 'border-box' }} />
-          </div>
-
-          <div style={{ marginBottom: '22px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#444', display: 'block', marginBottom: '6px' }}>Mot de passe</label>
-            <input type="password" value={motDePasse} onChange={e => setMotDePasse(e.target.value)} onKeyDown={handleKeyDown} placeholder="••••••••"
-              style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', background: '#fafafa', boxSizing: 'border-box' }} />
-          </div>
-
-          {erreur && (
-            <div style={{ background: '#fff5f5', border: '1.5px solid #fed7d7', borderRadius: '10px', padding: '11px 14px', marginBottom: '16px', fontSize: '13px', color: '#c53030', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              ⚠️ {erreur}
+            <div className="champ-groupe">
+              <label className="champ-label" htmlFor="mdp">Mot de passe</label>
+              <input id="mdp" className="champ" type="password" autoComplete={mode === 'connexion' ? 'current-password' : 'new-password'} value={motDePasse} onChange={e => setMotDePasse(e.target.value)} placeholder="••••••••" />
             </div>
-          )}
 
-          <button onClick={soumettre} disabled={chargement}
-            style={{ width: '100%', padding: '13px', background: chargement ? '#ccc' : 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '10px', cursor: chargement ? 'default' : 'pointer', fontSize: '15px', fontWeight: '600', boxShadow: chargement ? 'none' : '0 4px 15px rgba(29,158,117,0.35)' }}>
-            {chargement ? '⏳ Chargement...' : mode === 'connexion' ? 'Se connecter →' : 'Créer mon compte →'}
-          </button>
+            {erreur && <div className="message-erreur" role="alert"><Icone nom="croix" taille={16} style={{ flexShrink: 0, marginTop: 2 }} />{erreur}</div>}
 
-          <p style={{ textAlign: 'center', fontSize: '13px', color: '#aaa', marginTop: '20px' }}>
-            {mode === 'connexion' ? "Pas encore de compte ? " : "Déjà un compte ? "}
-            <span onClick={() => { setMode(mode === 'connexion' ? 'inscription' : 'connexion'); setErreur(''); }}
-              style={{ color: '#1D9E75', cursor: 'pointer', fontWeight: '600' }}>
-              {mode === 'connexion' ? "S'inscrire" : "Se connecter"}
-            </span>
+            <button type="submit" className="btn btn-primaire btn-grand btn-plein" disabled={chargement}>
+              {chargement ? 'Un instant…' : mode === 'connexion' ? 'Se connecter' : 'Créer mon compte'}
+              {!chargement && <Icone nom="fleche" taille={18} />}
+            </button>
+          </form>
+
+          <p className="centre petit texte-3" style={{ marginTop: 20 }}>
+            {mode === 'connexion' ? 'Pas encore de compte ? ' : 'Déjà un compte ? '}
+            <button type="button" className="btn-lien gras" style={{ background: 'none', border: 'none', color: 'var(--action)', padding: 0 }}
+              onClick={() => changerMode(mode === 'connexion' ? 'inscription' : 'connexion')}>
+              {mode === 'connexion' ? 'S\'inscrire' : 'Se connecter'}
+            </button>
+          </p>
+
+          <p className="ligne gap-1 tres-petit texte-3" style={{ justifyContent: 'center', marginTop: 28 }}>
+            <Icone nom="bouclier" taille={14} /> Mot de passe chiffré · Données protégées
           </p>
         </div>
-
-        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '12px', marginTop: '20px' }}>
-          🔒 Vos données sont sécurisées
-        </p>
-      </div>
+      </main>
     </div>
   );
 }

@@ -2,6 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import sujets from '../data/sujets-expression-orale';
 import API_URL from '../config';
+import { NIVEAU_COULEUR } from '../data/tcfCanada';
+
+// Préparation : 2 min pour la tâche 2 (comme à l'examen) ; 30 s d'échauffement pour les autres tâches en mode entraînement.
+const dureePreparation = sujet => sujet.preparation || 30;
 
 function ExpressionOrale({ onRetour })  {
   const [phase, setPhase] = useState('choix');
@@ -22,7 +26,7 @@ function ExpressionOrale({ onRetour })  {
   const prepTimerRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  const niveauCouleur = { 'B1': '#1D9E75', 'B2': '#378ADD', 'C1': '#7F77DD' };
+  const niveauCouleur = NIVEAU_COULEUR;
 
   useEffect(() => {
     return () => {
@@ -35,7 +39,7 @@ function ExpressionOrale({ onRetour })  {
   const commencerPreparation = (sujet) => {
     setSujetChoisi(sujet);
     setTempsRestant(sujet.duree);
-    setTempsPrep(30);
+    setTempsPrep(dureePreparation(sujet));
     setPhase('preparation');
 
     prepTimerRef.current = setInterval(() => {
@@ -83,7 +87,7 @@ function ExpressionOrale({ onRetour })  {
       if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
-        recognition.lang = 'fr-FR';
+        recognition.lang = 'fr-CA';
         recognition.continuous = true;
         recognition.interimResults = true;
 
@@ -123,14 +127,15 @@ function ExpressionOrale({ onRetour })  {
     }
     setChargement(true);
     try  { 
-      const res = await axios.post (`${process.env.REACT_APP_API_URL || '`${API_URL}`'}/api/ia/corriger-oral`, {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${API_URL}/api/ia/corriger-oral`, {
         tache: sujetChoisi.tache,
         sujet: sujetChoisi.sujet,
         transcription,
         niveau: sujetChoisi.niveau,
         dureeEnregistree: tempsEcoule,
         dureeAttandue: sujetChoisi.duree
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setCorrection(res.data);
       setPhase('correction');
     } catch (err) {
@@ -195,7 +200,7 @@ function ExpressionOrale({ onRetour })  {
             {tempsPrep}
           </div>
           <div style={{ height: '6px', background: '#f0f0f0', borderRadius: '6px', overflow: 'hidden', marginBottom: '24px' }}>
-            <div style={{ height: '100%', width: `${(tempsPrep / 30) * 100}%`, background: tempsPrep <= 10 ? '#E24B4A' : '#1D9E75', borderRadius: '6px', transition: 'width 1s linear' }} />
+            <div style={{ height: '100%', width: `${(tempsPrep / dureePreparation(sujetChoisi)) * 100}%`, background: tempsPrep <= 10 ? '#E24B4A' : '#1D9E75', borderRadius: '6px', transition: 'width 1s linear' }} />
           </div>
 
           <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'left' }}>

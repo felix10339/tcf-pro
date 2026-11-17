@@ -3,20 +3,10 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
+const { SECRET, verifierToken } = require('../middleware/auth');
+const { chargerUtilisateur, versPublic } = require('../services/abonnement');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-const SECRET = process.env.JWT_SECRET || 'tcf-canada-secret';
-
-function verifierToken(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ message: 'Token manquant' });
-  try {
-    req.utilisateur = jwt.verify(auth.replace('Bearer ', ''), SECRET);
-    next();
-  } catch {
-    res.status(401).json({ message: 'Token invalide' });
-  }
-}
 
 router.post('/inscription', async (req, res) => {
   const { nom, email, motDePasse } = req.body;
@@ -54,14 +44,15 @@ router.post('/connexion', async (req, res) => {
     return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
 
   const token = jwt.sign({ id: utilisateur.id, email }, SECRET, { expiresIn: '7d' });
-  res.json({
-    token,
-    utilisateur: {
-      id: utilisateur.id, nom: utilisateur.nom, email,
-      abonnement: utilisateur.abonnement, plan: utilisateur.plan,
-      dateFinAbonnement: utilisateur.date_fin_abonnement
-    }
-  });
+  // chargerUtilisateur rétrograde un abonnement expiré avant de répondre
+  res.json({ token, utilisateur: versPublic(await chargerUtilisateur(utilisateur.id)) });
+});
+
+// Statut à jour de l'utilisateur connecté (appelé au chargement de l'application et après un paiement)
+router.get('/moi', verifierToken, async (req, res) => {
+  const utilisateur = await chargerUtilisateur(req.utilisateur.id);
+  if (!utilisateur) return res.status(401).json({ message: 'Compte introuvable' });
+  res.json({ utilisateur: versPublic(utilisateur) });
 });
 
 router.put('/modifier-profil', verifierToken, async (req, res) => {

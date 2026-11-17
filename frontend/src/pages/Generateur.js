@@ -136,10 +136,12 @@ function Generateur({ onRetour }) {
                 onChange={e => setNiveau(e.target.value)}
                 style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', background: '#fafafa', cursor: 'pointer' }}
               >
-                <option value="A2">A2 — Débutant</option>
+                <option value="A1">A1 — Découverte</option>
+                <option value="A2">A2 — Survie</option>
                 <option value="B1">B1 — Intermédiaire</option>
                 <option value="B2">B2 — Avancé</option>
-                <option value="C1">C1 — Supérieur</option>
+                <option value="C1">C1 — Autonome</option>
+                <option value="C2">C2 — Maîtrise</option>
               </select>
             </div>
             <div>

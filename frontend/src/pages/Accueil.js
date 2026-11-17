@@ -1,255 +1,221 @@
 import { useState } from 'react';
+import Logo from '../components/Logo';
+import Icone from '../components/Icone';
+import { EPREUVES } from '../data/tcfCanada';
+import DemoSimulateur from '../components/DemoSimulateur';
+
+const ICONE_EPREUVE = { 'comprehension-orale': 'casque', 'comprehension-ecrite': 'livre', 'expression-ecrite': 'stylo', 'expression-orale': 'micro' };
+const COULEUR_EPREUVE = { 'comprehension-orale': 'var(--co)', 'comprehension-ecrite': 'var(--ce)', 'expression-ecrite': 'var(--ee)', 'expression-orale': 'var(--eo)' };
+
+// Exemple illustratif affiché dans le visuel du hero (pas un vrai résultat)
+const EXEMPLE_RESULTAT = [
+  { label: 'Compréhension orale', score: '512', max: '699', nclc: 8, pct: 73 },
+  { label: 'Compréhension écrite', score: '468', max: '699', nclc: 7, pct: 67 },
+  { label: 'Expression écrite', score: '12', max: '20', nclc: 8, pct: 60 },
+  { label: 'Expression orale', score: '10', max: '20', nclc: 7, pct: 50 }
+];
+
+const ETAPES = [
+  { titre: 'Évaluez votre niveau', texte: 'Passez un examen blanc au format officiel : 4 épreuves chronométrées, de A1 à C2.' },
+  { titre: 'Obtenez votre NCLC', texte: 'Chaque épreuve est convertie en NCLC selon les équivalences d\'IRCC, avec les points qu\'il vous manque.' },
+  { titre: 'Progressez là où ça compte', texte: 'Entraînez-vous par compétence et faites corriger vos productions par l\'IA, avec une note sur 20.' }
+];
 
 function Accueil({ onCommencer }) {
-  const temoignages = [
-    { nom: 'Fatima K.', pays: '🇲🇦 Maroc', score: 'TCF — C2', texte: 'Grâce aux explications de l\'IA, j\'ai compris mes erreurs et progressé très rapidement. Je recommande à 100% !' },
-    { nom: 'Jean-Pierre M.', pays: '🇨🇲 Cameroun', score: 'TCF — C1', texte: 'Les exercices audio sont excellents. J\'ai réussi mon TCF du premier coup après 3 semaines de préparation.' },
-    { nom: 'Amara D.', pays: '🇸🇳 Sénégal', score: 'TCF — B2', texte: 'L\'IA m\'expliquait chaque erreur avec précision. C\'est ce qui m\'a vraiment fait progresser rapidement.' }
-  ];
+  const [menuOuvert, setMenuOuvert] = useState(false);
 
-  const stats = [
-    { val: '2 400+', label: 'Candidats préparés' },
-    { val: '94%', label: 'Taux de réussite' },
-    { val: '1 500+', label: 'Questions disponibles' },
-    { val: '4', label: 'Compétences couvertes' }
-  ];
-
-  const fonctionnalites = [
-    { emoji: '🎧', titre: 'Compréhension orale', desc: 'Enregistrements audio authentiques avec questions chronométrées' },
-    { emoji: '📖', titre: 'Compréhension écrite', desc: 'Textes variés sur la culture, la société et la vie quotidienne francophone' },
-    { emoji: '✍️', titre: 'Expression écrite', desc: 'Rédactions corrigées par l\'IA avec notes et conseils détaillés' },
-    { emoji: '🎤', titre: 'Expression orale', desc: 'Monologues enregistrés et analysés par l\'IA' },
-    { emoji: '🤖', titre: 'IA explicative', desc: 'Explication personnalisée après chaque réponse (Pro)' },
-    { emoji: '📊', titre: 'Suivi de progression', desc: 'Tableau de bord détaillé par compétence et par niveau' }
-  ];
-
-  const demoQuestions = [
-    {
-      texte: 'En France, le baccalauréat est un examen qui sanctionne la fin des études secondaires. Il permet d\'accéder à l\'enseignement supérieur.',
-      question: 'À quoi sert le baccalauréat selon le texte ?',
-      options: ['Valider les études primaires', 'Accéder à l\'enseignement supérieur', 'Obtenir un diplôme professionnel', 'Entrer dans la fonction publique'],
-      correct: 1
-    },
-    {
-      texte: 'La gastronomie française est reconnue dans le monde entier. En 2010, elle a été inscrite au patrimoine culturel immatériel de l\'UNESCO.',
-      question: 'Depuis quelle année la gastronomie française est-elle au patrimoine de l\'UNESCO ?',
-      options: ['2005', '2008', '2010', '2015'],
-      correct: 2
-    }
-  ];
-
-  const [demoIndex, setDemoIndex] = useState(0);
-  const [demoReponse, setDemoReponse] = useState(null);
-  const [demoValide, setDemoValide] = useState(false);
-
-  const validerDemo = () => { if (demoReponse === null) return; setDemoValide(true); };
-  const questionSuivanteDemo = () => {
-    if (demoIndex + 1 < demoQuestions.length) {
-      setDemoIndex(i => i + 1); setDemoReponse(null); setDemoValide(false);
-    }
-  };
-  const q = demoQuestions[demoIndex];
+  const allerA = id => { setMenuOuvert(false); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); };
 
   return (
-    <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", color: '#1a1a2e', overflowX: 'hidden' }}>
-
-      {/* NAVBAR */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #eee', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontWeight: '800', fontSize: '20px', letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          TCFPro 🇫🇷
+    <div>
+      {/* ——— Navigation ——— */}
+      <nav className="nav">
+        <div className="conteneur nav-interieur">
+          <Logo onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+          <div className="nav-liens desktop-only">
+            <button className="nav-lien" onClick={() => allerA('epreuves')}>Les épreuves</button>
+            <button className="nav-lien" onClick={() => allerA('demo')}>Démo du simulateur</button>
+            <button className="nav-lien" onClick={() => allerA('methode')}>Méthode</button>
+          </div>
+          <div className="ligne gap-2">
+            <button className="btn btn-lien desktop-only" onClick={onCommencer}>Se connecter</button>
+            <button className="btn btn-primaire btn-petit" onClick={onCommencer}>Commencer</button>
+            <button className="btn btn-lien mobile-only" onClick={() => setMenuOuvert(o => !o)} aria-label="Menu" aria-expanded={menuOuvert}>
+              <Icone nom={menuOuvert ? 'croix' : 'menu'} taille={22} />
+            </button>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button onClick={onCommencer} style={{ fontSize: '13px', color: '#444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
-            Se connecter
-          </button>
-          <button onClick={onCommencer} style={{ padding: '9px 20px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', boxShadow: '0 4px 12px rgba(29,158,117,0.3)' }}>
-            Commencer gratuitement →
-          </button>
-        </div>
+        {menuOuvert && (
+          <div className="menu-mobile mobile-only">
+            <button className="nav-lien" onClick={() => allerA('epreuves')}>Les épreuves</button>
+            <button className="nav-lien" onClick={() => allerA('demo')}>Démo du simulateur</button>
+            <button className="nav-lien" onClick={() => allerA('methode')}>Méthode</button>
+            <button className="nav-lien" onClick={onCommencer}>Se connecter</button>
+          </div>
+        )}
       </nav>
 
-      {/* HERO AVEC FONDATEUR INTÉGRÉ */}
-      <div style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)', padding: '60px 20px 80px', color: '#fff' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '48px', flexWrap: 'wrap' }}>
-
-          {/* GAUCHE — Photo fondateur */}
-          <div style={{ flexShrink: 0, textAlign: 'center', margin: '0 auto' }}>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <div style={{ width: '200px', height: '240px', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,0.4)', border: '3px solid #1D9E75' }}>
-                <img
-                  src="/fondateur.jpeg"
-                  alt="Felix Chatue — Fondateur TCFPro"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%' }}
-                />
-              </div>
-              {/* Badge fondateur */}
-              <div style={{ position: 'absolute', bottom: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#1D9E75', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '5px 14px', borderRadius: '20px', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(29,158,117,0.4)' }}>
-                👨‍💻 Fondateur & CEO
-              </div>
-            </div>
-            <div style={{ marginTop: '24px' }}>
-              <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>Felix Chatue</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>🇨🇲 Cameroun · EdTech</div>
-            </div>
-          </div>
-
-          {/* DROITE — Texte hero */}
-          <div style={{ flex: 1, minWidth: '280px' }}>
-            <div style={{ display: 'inline-block', background: 'rgba(29,158,117,0.2)', border: '1px solid rgba(29,158,117,0.4)', borderRadius: '20px', padding: '6px 16px', fontSize: '12px', color: '#4ECDA4', marginBottom: '20px', fontWeight: '500' }}>
-              🚀 Plateforme de préparation au TCF propulsée par l'IA
-            </div>
-            <h1 style={{ fontSize: 'clamp(26px, 4vw, 48px)', fontWeight: '800', lineHeight: '1.15', marginBottom: '16px', letterSpacing: '-1px' }}>
-              Réussissez votre <span style={{ color: '#1D9E75' }}>TCF</span><br />du premier coup
+      {/* ——— Hero ——— */}
+      <header className="section" style={{ paddingTop: 'clamp(40px, 7vw, 88px)' }}>
+        <div className="conteneur grille" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 'clamp(32px, 6vw, 72px)', alignItems: 'center' }}>
+          <div className="apparaitre">
+            <div className="sur-titre" style={{ marginBottom: 18 }}>Préparation au TCF Canada</div>
+            <h1 className="titre-display" style={{ marginBottom: 20 }}>
+              Visez le <span style={{ color: 'var(--action)' }}>NCLC 7</span> au TCF Canada.
             </h1>
-
-            {/* Citation fondateur */}
-            <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', borderLeft: '3px solid #1D9E75' }}>
-              <p style={{ fontSize: 'clamp(13px, 1.5vw, 15px)', color: 'rgba(255,255,255,0.85)', lineHeight: '1.7', fontStyle: 'italic', margin: 0 }}>
-                "J'ai créé TCFPro pour donner à chaque candidat francophone — peu importe son pays ou son budget — les meilleures chances de réussir son TCF grâce à l'intelligence artificielle."
-              </p>
-              <div style={{ fontSize: '12px', color: '#4ECDA4', fontWeight: '600', marginTop: '10px' }}>
-                — Felix Chatue, Fondateur de TCFPro
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button onClick={onCommencer} style={{ padding: '13px 28px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: '700', boxShadow: '0 8px 24px rgba(29,158,117,0.4)' }}>
-                Commencer gratuitement →
+            <p className="texte-intro" style={{ marginBottom: 28, maxWidth: 520 }}>
+              Des examens blancs au format officiel, des situations de la vie au Canada et un résultat converti en NCLC, le niveau qu'IRCC utilise pour Entrée express.
+            </p>
+            <div className="ligne envelopper gap-2" style={{ marginBottom: 28 }}>
+              <button className="btn btn-primaire btn-grand" onClick={onCommencer}>
+                Commencer gratuitement <Icone nom="fleche" taille={18} />
               </button>
-              <button onClick={onCommencer} style={{ padding: '13px 24px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: '500' }}>
-                Se connecter
-              </button>
+              <button className="btn btn-contour btn-grand" onClick={() => allerA('demo')}>Essayer la démo</button>
             </div>
-
-            {/* Stats */}
-            <div style={{ display: 'flex', gap: '24px', marginTop: '32px', flexWrap: 'wrap' }}>
-              {stats.map((s, i) => (
-                <div key={i} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 'clamp(18px, 2.5vw, 26px)', fontWeight: '800', color: '#1D9E75' }}>{s.val}</div>
-                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', marginTop: '2px' }}>{s.label}</div>
-                </div>
+            <ul className="ligne envelopper gap-3 petit texte-2" style={{ listStyle: 'none' }}>
+              {['Format officiel', 'Résultats en NCLC', 'Corrections par IA'].map(t => (
+                <li key={t} className="ligne gap-1"><Icone nom="coche" taille={16} style={{ color: 'var(--succes)' }} />{t}</li>
               ))}
-            </div>
+            </ul>
           </div>
-        </div>
-      </div>
 
-      {/* DEMO INTERACTIVE */}
-      <div style={{ background: '#fff', padding: '60px 20px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: '800', marginBottom: '8px' }}>Essayez gratuitement</h2>
-            <p style={{ fontSize: '14px', color: '#888' }}>2 questions de démonstration — créez un compte pour accéder à tout le contenu</p>
-          </div>
-          <div style={{ background: '#f9fafb', borderRadius: '16px', padding: '24px', border: '1px solid #eee' }}>
-            <div style={{ fontSize: '11px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
-              Question démo {demoIndex + 1} / {demoQuestions.length}
-            </div>
-            <div style={{ background: '#f0f0f0', borderRadius: '8px', padding: '14px', marginBottom: '14px', fontSize: '14px', lineHeight: '1.7', color: '#444' }}>
-              {q.texte}
-            </div>
-            <p style={{ fontWeight: '600', fontSize: '15px', marginBottom: '12px' }}>{q.question}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-              {q.options.map((opt, i) => {
-                let bg = '#fff', border = '1.5px solid #e0e0e0', color = '#333';
-                if (demoValide) {
-                  if (i === q.correct) { bg = '#E1F5EE'; border = '1.5px solid #1D9E75'; color = '#085041'; }
-                  else if (i === demoReponse) { bg = '#FCEBEB'; border = '1.5px solid #E24B4A'; color = '#7B1A1A'; }
-                } else if (i === demoReponse) { bg = '#E6F1FB'; border = '1.5px solid #378ADD'; }
-                return (
-                  <button key={i} onClick={() => !demoValide && setDemoReponse(i)}
-                    style={{ padding: '12px 16px', background: bg, border, borderRadius: '10px', textAlign: 'left', cursor: demoValide ? 'default' : 'pointer', fontSize: '14px', color, transform: 'none' }}>
-                    {String.fromCharCode(65 + i)}. {opt}
-                  </button>
-                );
-              })}
-            </div>
-            {demoValide && (
-              <div style={{ background: '#f4f6f8', borderRadius: '10px', padding: '12px 14px', marginBottom: '14px', fontSize: '13px', color: '#555' }}>
-                💡 {demoReponse === q.correct ? 'Bonne réponse !' : 'Mauvaise réponse.'} Passez Pro pour des explications détaillées par IA.
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {!demoValide && (
-                <button onClick={validerDemo} disabled={demoReponse === null}
-                  style={{ flex: 1, padding: '12px', background: demoReponse === null ? '#ccc' : '#1D9E75', color: '#fff', border: 'none', borderRadius: '10px', cursor: demoReponse === null ? 'default' : 'pointer', fontSize: '14px', fontWeight: '600' }}>
-                  Valider
-                </button>
-              )}
-              {demoValide && demoIndex + 1 < demoQuestions.length && (
-                <button onClick={questionSuivanteDemo} style={{ flex: 1, padding: '12px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
-                  Question suivante →
-                </button>
-              )}
-              {demoValide && demoIndex + 1 >= demoQuestions.length && (
-                <button onClick={onCommencer} style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>
-                  🚀 Créer un compte pour continuer →
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* FONCTIONNALITÉS */}
-      <div style={{ background: '#f4f6f8', padding: '80px 20px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: '800', marginBottom: '12px' }}>Tout ce qu'il vous faut pour réussir</h2>
-            <p style={{ fontSize: '15px', color: '#888', maxWidth: '500px', margin: '0 auto' }}>Une plateforme complète couvrant les 4 compétences du TCF, propulsée par l'IA.</p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-            {fonctionnalites.map((f, i) => (
-              <div key={i} style={{ background: '#fff', borderRadius: '14px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #eee' }}>
-                <div style={{ fontSize: '28px', marginBottom: '12px' }}>{f.emoji}</div>
-                <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px' }}>{f.titre}</div>
-                <div style={{ fontSize: '13px', color: '#888', lineHeight: '1.6' }}>{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* TÉMOIGNAGES */}
-      <div style={{ background: '#fff', padding: '80px 20px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: '800', marginBottom: '12px' }}>Ils ont réussi leur TCF 🎉</h2>
-            <p style={{ fontSize: '15px', color: '#888' }}>Des vrais résultats, des vraies personnes</p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-            {temoignages.map((t, i) => (
-              <div key={i} style={{ background: '#f9fafb', borderRadius: '14px', padding: '24px', border: '1px solid #eee' }}>
-                <div style={{ fontSize: '20px', marginBottom: '12px' }}>⭐⭐⭐⭐⭐</div>
-                <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.7', marginBottom: '16px', fontStyle: 'italic' }}>"{t.texte}"</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: '700' }}>{t.nom}</div>
-                    <div style={{ fontSize: '12px', color: '#aaa' }}>{t.pays}</div>
-                  </div>
-                  <div style={{ background: '#E1F5EE', color: '#0F6E56', fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '20px' }}>{t.score}</div>
+          {/* Visuel : exemple de résultat */}
+          <div className="apparaitre delai-2" aria-label="Exemple de résultat estimé">
+            <div className="carte" style={{ padding: 0, boxShadow: 'var(--ombre-3)', overflow: 'hidden', maxWidth: 480, marginInline: 'auto' }}>
+              <div className="ligne entre" style={{ padding: '18px 22px', borderBottom: '1px solid var(--bordure)' }}>
+                <div>
+                  <div className="tres-petit texte-3 gras" style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>Examen blanc · exemple</div>
+                  <div className="titre-3">Résultat estimé</div>
                 </div>
+                <span className="badge badge-succes"><Icone nom="coche" taille={13} /> Objectif atteint</span>
+              </div>
+              <div className="pile gap-3" style={{ padding: '20px 22px' }}>
+                {EXEMPLE_RESULTAT.map(r => (
+                  <div key={r.label}>
+                    <div className="ligne entre petit" style={{ marginBottom: 6 }}>
+                      <span className="texte-2">{r.label}</span>
+                      <span className="chiffres"><strong>{r.score}</strong><span className="texte-3">/{r.max}</span> · <strong style={{ color: 'var(--succes)' }}>NCLC {r.nclc}</strong></span>
+                    </div>
+                    <div className="progression"><div style={{ width: `${r.pct}%`, background: 'var(--nuit)' }} /></div>
+                  </div>
+                ))}
+              </div>
+              <div className="ligne entre" style={{ padding: '16px 22px', background: 'var(--nuit)', color: '#fff' }}>
+                <span className="petit" style={{ opacity: 0.75 }}>Niveau le plus faible</span>
+                <span style={{ fontFamily: 'var(--police-titre)', fontSize: '1.5rem', fontWeight: 700 }}>NCLC 7</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ——— Bandeau de faits ——— */}
+      <section style={{ background: 'var(--nuit)', color: '#fff' }}>
+        <div className="conteneur grille grille-4" style={{ padding: '32px 20px' }}>
+          {[
+            { val: '4', label: 'épreuves officielles' },
+            { val: 'A1 → C2', label: 'questions de tous niveaux' },
+            { val: 'NCLC 4 → 10+', label: 'conversion IRCC' },
+            { val: '100 %', label: 'situations canadiennes' }
+          ].map(f => (
+            <div key={f.label}>
+              <div style={{ fontFamily: 'var(--police-titre)', fontSize: 'clamp(1.4rem, 2.6vw, 1.9rem)', fontWeight: 700 }}>{f.val}</div>
+              <div className="petit" style={{ opacity: 0.7 }}>{f.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ——— Les 4 épreuves ——— */}
+      <section id="epreuves" className="section">
+        <div className="conteneur">
+          <div style={{ maxWidth: 640, marginBottom: 40 }}>
+            <div className="sur-titre" style={{ marginBottom: 12 }}>Le format officiel</div>
+            <h2 className="titre-1" style={{ marginBottom: 12 }}>Les 4 épreuves du TCF Canada, dans les vraies conditions</h2>
+            <p className="texte-intro">Mêmes durées, même nombre de questions, même progression de difficulté que le jour de l'examen.</p>
+          </div>
+          <div className="grille grille-4">
+            {EPREUVES.map(ep => (
+              <article key={ep.key} className="carte">
+                <div className="pastille-icone" style={{ background: 'var(--surface-2)', color: COULEUR_EPREUVE[ep.key], marginBottom: 16 }}>
+                  <Icone nom={ICONE_EPREUVE[ep.key]} taille={22} />
+                </div>
+                <h3 className="titre-3" style={{ marginBottom: 6 }}>{ep.label}</h3>
+                <p className="petit texte-2" style={{ marginBottom: 14 }}>
+                  {ep.type === 'qcm' ? `${ep.nbQuestions} questions à choix multiples, de A1 à C2.` : `${ep.nbTaches} tâches, corrigées par l'IA.`}
+                </p>
+                <div className="ligne gap-1 envelopper">
+                  <span className="badge"><Icone nom="chrono" taille={13} /> {ep.dureeMinutes} min</span>
+                  <span className="badge">Noté {ep.bareme}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ——— Démo du simulateur ——— */}
+      <section id="demo" className="section" style={{ background: 'var(--surface)', borderBlock: '1px solid var(--bordure)' }}>
+        <div className="conteneur" style={{ maxWidth: 880 }}>
+          <div className="centre" style={{ marginBottom: 32 }}>
+            <div className="sur-titre" style={{ marginBottom: 12 }}>Démo du simulateur</div>
+            <h2 className="titre-1" style={{ marginBottom: 8 }}>Essayez l'examen blanc, gratuitement</h2>
+            <p className="texte-2">Un mini examen chronométré dans l'interface du vrai simulateur. Sans inscription.</p>
+          </div>
+          <DemoSimulateur onCommencer={onCommencer} />
+        </div>
+      </section>
+
+      {/* ——— Méthode ——— */}
+      <section id="methode" className="section">
+        <div className="conteneur">
+          <div className="centre" style={{ maxWidth: 620, margin: '0 auto 44px' }}>
+            <div className="sur-titre" style={{ marginBottom: 12 }}>La méthode</div>
+            <h2 className="titre-1">Trois étapes vers votre NCLC cible</h2>
+          </div>
+          <div className="grille grille-3">
+            {ETAPES.map((e, i) => (
+              <div key={e.titre} className="carte" style={{ position: 'relative' }}>
+                <div style={{ fontFamily: 'var(--police-titre)', fontSize: '2.4rem', fontWeight: 700, color: 'var(--action)', lineHeight: 1, marginBottom: 14 }}>{i + 1}</div>
+                <h3 className="titre-3" style={{ marginBottom: 8 }}>{e.titre}</h3>
+                <p className="petit texte-2">{e.texte}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* CTA FINAL */}
-      <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '80px 20px', textAlign: 'center', color: '#fff' }}>
-        <h2 style={{ fontSize: 'clamp(22px, 3vw, 36px)', fontWeight: '800', marginBottom: '16px' }}>Prêt à réussir votre TCF ?</h2>
-        <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.65)', marginBottom: '32px', maxWidth: '480px', margin: '0 auto 32px' }}>
-          Rejoignez des milliers de candidats qui se préparent avec TCFPro chaque jour.
-        </p>
-        <button onClick={onCommencer} style={{ padding: '16px 40px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '17px', fontWeight: '700', boxShadow: '0 8px 30px rgba(29,158,117,0.4)' }}>
-          Commencer gratuitement →
-        </button>
-      </div>
+      {/* ——— Fondateur ——— */}
+      <section className="section" style={{ background: 'var(--surface)', borderTop: '1px solid var(--bordure)' }}>
+        <div className="conteneur-etroit ligne gap-4 envelopper" style={{ justifyContent: 'center' }}>
+          <img src="/fondateur.jpeg" alt="Felix Chatue, fondateur de TCF Pro" width="160" height="192" loading="lazy" decoding="async"
+            style={{ width: 160, height: 192, objectFit: 'cover', objectPosition: 'center 15%', borderRadius: 'var(--rayon-lg)', boxShadow: 'var(--ombre-2)' }} />
+          <figure style={{ flex: 1, minWidth: 260 }}>
+            <blockquote className="titre-2" style={{ fontWeight: 600, marginBottom: 16 }}>
+              « J'ai créé TCF Pro pour que chaque candidat francophone, peu importe son pays ou son budget, arrive au TCF Canada en sachant exactement où il en est. »
+            </blockquote>
+            <figcaption className="petit">
+              <strong>Felix Chatue</strong> <span className="texte-3">· Fondateur de TCF Pro</span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
 
-      {/* FOOTER */}
-      <div style={{ background: '#111', padding: '24px', textAlign: 'center', color: '#555', fontSize: '13px' }}>
-        © 2025 TCFPro — Tous droits réservés · Fondé par Felix Chatue 🇨🇲
-      </div>
+      {/* ——— Appel final ——— */}
+      <section className="section" style={{ background: 'var(--nuit)', color: '#fff', textAlign: 'center' }}>
+        <div className="conteneur-etroit">
+          <h2 className="titre-1" style={{ marginBottom: 14 }}>Prêt à connaître votre NCLC ?</h2>
+          <p style={{ opacity: 0.75, marginBottom: 28 }}>Créez votre compte gratuitement et commencez à vous entraîner dès aujourd'hui.</p>
+          <button className="btn btn-primaire btn-grand" onClick={onCommencer}>Commencer gratuitement <Icone nom="fleche" taille={18} /></button>
+        </div>
+      </section>
+
+      <footer style={{ background: '#081629', color: 'rgba(255,255,255,0.55)', padding: '28px 0' }}>
+        <div className="conteneur ligne entre envelopper gap-2 petit">
+          <Logo clair onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+          <span>© {new Date().getFullYear()} TCF Pro · Plateforme indépendante, non affiliée à France Éducation international ni à IRCC.</span>
+        </div>
+      </footer>
     </div>
   );
 }
