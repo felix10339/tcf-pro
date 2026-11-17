@@ -6,6 +6,7 @@ import { NIVEAU_COULEUR } from '../data/tcfCanada';
 import EntetePage from '../components/EntetePage';
 import CarteCorrection from '../components/CarteCorrection';
 import Icone from '../components/Icone';
+import { STRUCTURES } from '../data/conseils';
 
 const TACHES = [1, 2, 3];
 const NOM_TACHE = { 1: 'Message', 2: 'Article ou récit', 3: 'Argumentation' };
@@ -99,6 +100,14 @@ function ExpressionEcrite({ onRetour }) {
             <Icone nom="coche" taille={18} style={{ flexShrink: 0, marginTop: 2 }} />
             <ul className="pile" style={{ gap: 2, listStyle: 'none' }}>{sujetChoisi.consignes.map((c, i) => <li key={i}>{c}</li>)}</ul>
           </div>
+          {STRUCTURES.ecrit[sujetChoisi.numeroTache] && (
+            <details style={{ marginTop: 12 }}>
+              <summary className="petit gras" style={{ cursor: 'pointer', color: 'var(--action)' }}>{STRUCTURES.ecrit[sujetChoisi.numeroTache].titre}</summary>
+              <ol className="pile gap-1 petit texte-2" style={{ marginTop: 10, paddingLeft: 20 }}>
+                {STRUCTURES.ecrit[sujetChoisi.numeroTache].etapes.map((e, i) => <li key={i}>{e}</li>)}
+              </ol>
+            </details>
+          )}
         </div>
 
         <div className="carte" style={{ marginBottom: 16 }}>

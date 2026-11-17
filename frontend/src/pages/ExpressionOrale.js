@@ -6,6 +6,7 @@ import { NIVEAU_COULEUR } from '../data/tcfCanada';
 import EntetePage from '../components/EntetePage';
 import CarteCorrection from '../components/CarteCorrection';
 import Icone from '../components/Icone';
+import { STRUCTURES } from '../data/conseils';
 
 // Préparation : 2 min pour la tâche 2 (comme à l'examen) ; 30 s d'échauffement pour les autres tâches en mode entraînement.
 const dureePreparation = sujet => sujet.preparation || 30;
@@ -203,6 +204,14 @@ function ExpressionOrale({ onRetour }) {
               <ul className="pile gap-1" style={{ listStyle: 'none' }}>
                 {sujetChoisi.conseils.map((c, i) => <li key={i} className="ligne gap-1 petit texte-2" style={{ alignItems: 'flex-start' }}><Icone nom="ampoule" taille={14} style={{ flexShrink: 0, marginTop: 3 }} />{c}</li>)}
               </ul>
+              {STRUCTURES.oral[sujetChoisi.numeroTache] && (
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--bordure)' }}>
+                  <p className="etiquette" style={{ marginBottom: 6 }}>{STRUCTURES.oral[sujetChoisi.numeroTache].titre}</p>
+                  <ol className="pile gap-1 petit texte-2" style={{ paddingLeft: 20 }}>
+                    {STRUCTURES.oral[sujetChoisi.numeroTache].etapes.map((e, i) => <li key={i}>{e}</li>)}
+                  </ol>
+                </div>
+              )}
             </div>
             <button className="btn btn-primaire btn-grand btn-plein" onClick={demarrerEnregistrement}><Icone nom="micro" taille={18} /> Je suis prêt(e), commencer</button>
           </div>

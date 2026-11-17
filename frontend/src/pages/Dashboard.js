@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icone from '../components/Icone';
+import { astuceDuJour } from '../data/conseils';
 
 const SECTIONS = [
   { key: 'comprehension-orale', label: 'Compréhension orale', icone: 'casque', couleur: 'var(--co)', detail: 'Messages, annonces, entrevues', gratuit: true },
@@ -18,7 +19,8 @@ const STATS_VIDES = {
   }
 };
 
-function Dashboard({ utilisateur, onCommencerQuiz, onSimulateur, onTarifs }) {
+function Dashboard({ utilisateur, onCommencerQuiz, onSimulateur, onTarifs, onConseils }) {
+  const astuce = astuceDuJour();
   const [stats, setStats] = useState(STATS_VIDES);
 
   useEffect(() => {
@@ -83,10 +85,25 @@ function Dashboard({ utilisateur, onCommencerQuiz, onSimulateur, onTarifs }) {
           </span>
         </button>
 
-        {/* Conseil */}
-        <div className="carte ligne gap-2" style={{ padding: '14px 18px', marginBottom: 32, borderLeft: '3px solid var(--action)', alignItems: 'flex-start' }}>
-          <Icone nom="ampoule" taille={18} style={{ color: 'var(--action)', flexShrink: 0, marginTop: 3 }} />
-          <p className="petit texte-2">{conseil}</p>
+        {/* Progression + astuce du jour */}
+        <div className="grille grille-2" style={{ marginBottom: 32 }}>
+          <div className="carte ligne gap-2" style={{ padding: '16px 18px', borderLeft: '3px solid var(--succes)', alignItems: 'flex-start' }}>
+            <Icone nom="graphique" taille={18} style={{ color: 'var(--succes)', flexShrink: 0, marginTop: 3 }} />
+            <div>
+              <p className="etiquette" style={{ marginBottom: 4 }}>Votre progression</p>
+              <p className="petit texte-2">{conseil}</p>
+            </div>
+          </div>
+          <div className="carte ligne gap-2" style={{ padding: '16px 18px', borderLeft: '3px solid var(--action)', alignItems: 'flex-start' }}>
+            <Icone nom="ampoule" taille={18} style={{ color: 'var(--action)', flexShrink: 0, marginTop: 3 }} />
+            <div style={{ flex: 1 }}>
+              <p className="etiquette" style={{ marginBottom: 4 }}>Astuce du jour · {astuce.epreuve}</p>
+              <p className="petit texte-2" style={{ marginBottom: 8 }}>{astuce.texte}</p>
+              <button className="btn-lien petit gras ligne gap-1" style={{ background: 'none', border: 'none', padding: 0, color: 'var(--action)' }} onClick={() => onConseils?.()}>
+                Voir tous les conseils <Icone nom="fleche" taille={14} />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Entraînement par compétence */}

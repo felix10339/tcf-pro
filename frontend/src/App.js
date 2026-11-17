@@ -17,6 +17,7 @@ const Tarifs = lazy(() => import('./pages/Tarifs'));
 const PaiementSucces = lazy(() => import('./pages/PaiementSucces'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Profil = lazy(() => import('./pages/Profil'));
+const Conseils = lazy(() => import('./pages/Conseils'));
 
 const Chargement = () => (
   <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Chargement">
@@ -73,6 +74,10 @@ function App() {
     setPage('app');
   }, []);
 
+  // Ouvre le guide de conseils, éventuellement sur une rubrique précise
+  const [ongletConseils, setOngletConseils] = useState('generale');
+  const ouvrirConseils = (rubrique = 'generale') => { setOngletConseils(rubrique); naviguer('conseils'); };
+
   const naviguer = (p) => {
     setPage(p);
     setMenuMobileOuvert(false);
@@ -90,6 +95,7 @@ function App() {
   const liens = [
     { id: 'app', label: 'Tableau de bord' },
     { id: 'simulateur', label: 'Examen blanc', pro: true },
+    { id: 'conseils', label: 'Conseils' },
     { id: 'profil', label: 'Mon profil' },
     ...(estAdmin ? [{ id: 'admin', label: 'Admin' }] : [])
   ];
@@ -175,14 +181,15 @@ function App() {
           <Route path="*" element={
             <>
               {navbar}
-              {page === 'profil' ? <Profil utilisateur={utilisateur} onMisAJour={onMisAJour} onRetour={() => naviguer('app')} onTarifs={() => naviguer('tarifs')} />
+              {page === 'conseils' ? <Conseils onRetour={() => naviguer('app')} ongletInitial={ongletConseils} />
+              : page === 'profil' ? <Profil utilisateur={utilisateur} onMisAJour={onMisAJour} onRetour={() => naviguer('app')} onTarifs={() => naviguer('tarifs')} />
               : page === 'admin' ? <Admin onRetour={() => naviguer('app')} />
               : page === 'tarifs' ? <Tarifs utilisateur={utilisateur} onRetour={() => naviguer('app')} />
               : page === 'simulateur' ? <PagePro><Simulateur utilisateur={utilisateur} onRetour={() => naviguer('app')} /></PagePro>
               : page === 'expression-ecrite' ? <PagePro><ExpressionEcrite onRetour={() => naviguer('app')} utilisateur={utilisateur} /></PagePro>
               : page === 'expression-orale' ? <PagePro><ExpressionOrale onRetour={() => naviguer('app')} utilisateur={utilisateur} /></PagePro>
               : sectionActive ? <Quiz section={sectionActive} utilisateur={utilisateur} onRetourDashboard={() => setSectionActive(null)} />
-              : <Dashboard utilisateur={utilisateur} onCommencerQuiz={naviguerSection} onSimulateur={() => estPro ? naviguer('simulateur') : naviguer('tarifs')} onTarifs={() => naviguer('tarifs')} />}
+              : <Dashboard utilisateur={utilisateur} onCommencerQuiz={naviguerSection} onSimulateur={() => estPro ? naviguer('simulateur') : naviguer('tarifs')} onTarifs={() => naviguer('tarifs')} onConseils={ouvrirConseils} />}
             </>
           } />
         </Routes>
