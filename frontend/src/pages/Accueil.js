@@ -21,7 +21,14 @@ const ETAPES = [
   { titre: 'Progressez là où ça compte', texte: 'Entraînez-vous par compétence et faites corriger vos productions par l\'IA, avec une note sur 20.' }
 ];
 
-function Accueil({ onCommencer }) {
+// Aperçu du guide sur la page d'accueil
+const APERCU_CONSEILS = [
+  { rubrique: 'comprehension-orale', icone: 'casque', titre: 'Compréhension orale', texte: 'Méfiez-vous des réponses qui reprennent mot pour mot l\'enregistrement : ce sont souvent des pièges.' },
+  { rubrique: 'expression-ecrite', icone: 'stylo', titre: 'Expression écrite', texte: 'En tâche 3, présentez les deux documents avant de donner votre opinion : c\'est ce que le correcteur attend.' },
+  { rubrique: 'nclc', icone: 'cible', titre: 'Objectif NCLC', texte: 'IRCC évalue chaque compétence séparément : votre compétence la plus faible décide de votre admissibilité.' }
+];
+
+function Accueil({ onCommencer, onConseils }) {
   const [menuOuvert, setMenuOuvert] = useState(false);
 
   const allerA = id => { setMenuOuvert(false); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); };
@@ -36,6 +43,7 @@ function Accueil({ onCommencer }) {
             <button className="nav-lien" onClick={() => allerA('epreuves')}>Les épreuves</button>
             <button className="nav-lien" onClick={() => allerA('demo')}>Démo du simulateur</button>
             <button className="nav-lien" onClick={() => allerA('methode')}>Méthode</button>
+            <button className="nav-lien" onClick={() => onConseils?.()}>Conseils</button>
           </div>
           <div className="ligne gap-2">
             <button className="btn btn-lien desktop-only" onClick={onCommencer}>Se connecter</button>
@@ -50,6 +58,7 @@ function Accueil({ onCommencer }) {
             <button className="nav-lien" onClick={() => allerA('epreuves')}>Les épreuves</button>
             <button className="nav-lien" onClick={() => allerA('demo')}>Démo du simulateur</button>
             <button className="nav-lien" onClick={() => allerA('methode')}>Méthode</button>
+            <button className="nav-lien" onClick={() => onConseils?.()}>Conseils</button>
             <button className="nav-lien" onClick={onCommencer}>Se connecter</button>
           </div>
         )}
@@ -163,6 +172,29 @@ function Accueil({ onCommencer }) {
             <p className="texte-2">Un mini examen chronométré dans l'interface du vrai simulateur. Sans inscription.</p>
           </div>
           <DemoSimulateur onCommencer={onCommencer} />
+        </div>
+      </section>
+
+      {/* ——— Aperçu des conseils ——— */}
+      <section id="conseils" className="section">
+        <div className="conteneur">
+          <div className="ligne entre envelopper gap-3" style={{ marginBottom: 32, alignItems: 'flex-end' }}>
+            <div style={{ maxWidth: 600 }}>
+              <div className="sur-titre" style={{ marginBottom: 12 }}>Guide gratuit</div>
+              <h2 className="titre-1" style={{ marginBottom: 8 }}>Les conseils qui font gagner des points</h2>
+              <p className="texte-2">Méthode par épreuve, pièges fréquents, structures types et objectifs NCLC. Consultable sans inscription.</p>
+            </div>
+            <button className="btn btn-contour" onClick={() => onConseils?.()}>Lire le guide complet <Icone nom="fleche" taille={16} /></button>
+          </div>
+          <div className="grille grille-3">
+            {APERCU_CONSEILS.map(c => (
+              <button key={c.titre} className="carte carte-cliquable pile" style={{ gap: 10 }} onClick={() => onConseils?.(c.rubrique)}>
+                <span className="ligne gap-2 gras" style={{ color: 'var(--action)' }}><Icone nom={c.icone} taille={18} /> {c.titre}</span>
+                <p className="texte-2" style={{ lineHeight: 1.6 }}>{c.texte}</p>
+                <span className="ligne gap-1 petit gras" style={{ color: 'var(--action)', marginTop: 'auto' }}>En savoir plus <Icone nom="fleche" taille={14} /></span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 

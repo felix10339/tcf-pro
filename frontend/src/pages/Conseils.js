@@ -30,14 +30,14 @@ function Structure({ structure }) {
   );
 }
 
-function Conseils({ onRetour, ongletInitial = 'generale' }) {
+function Conseils({ onRetour, libelleRetour, ongletInitial = 'generale', onCommencer }) {
   const [onglet, setOnglet] = useState(ongletInitial);
   const strategie = STRATEGIES[onglet];
   const structures = onglet === 'expression-ecrite' ? STRUCTURES.ecrit : onglet === 'expression-orale' ? STRUCTURES.oral : null;
 
   return (
     <div>
-      <EntetePage surTitre="Guide de méthode" titre="Conseils pour réussir le TCF Canada" sousTitre="Stratégies par épreuve, structures types, expressions utiles et objectifs NCLC selon votre projet." onRetour={onRetour} />
+      <EntetePage surTitre="Guide de méthode" titre="Conseils pour réussir le TCF Canada" sousTitre="Stratégies par épreuve, structures types, expressions utiles et objectifs NCLC selon votre projet." onRetour={onRetour} libelleRetour={libelleRetour} />
 
       <main className="conteneur chevauche" style={{ maxWidth: 900, paddingBottom: 56 }}>
         <div className="carte" style={{ padding: '0 12px', marginBottom: 20 }}>
@@ -142,6 +142,17 @@ function Conseils({ onRetour, ongletInitial = 'generale' }) {
               <Icone nom="ampoule" taille={18} style={{ flexShrink: 0, marginTop: 2 }} />
               <p>Ces exigences sont données à titre indicatif et peuvent changer. Vérifiez toujours les conditions à jour de votre programme sur <strong>canada.ca</strong> avant de vous inscrire à l'examen. Les résultats du TCF Canada sont acceptés par IRCC pendant 2 ans.</p>
             </div>
+          </div>
+        )}
+
+        {/* Visiteur sans compte : invitation à passer à la pratique */}
+        {onCommencer && (
+          <div className="carte carte-nuit ligne entre envelopper gap-3" style={{ marginTop: 28, padding: 'clamp(20px, 3vw, 28px)' }}>
+            <div>
+              <h2 className="titre-2" style={{ color: '#fff', marginBottom: 4 }}>Mettez ces conseils en pratique</h2>
+              <p className="petit" style={{ opacity: 0.75 }}>Entraînez-vous gratuitement sur des questions au format du TCF Canada.</p>
+            </div>
+            <button className="btn btn-primaire" onClick={onCommencer}>Créer mon compte gratuit <Icone nom="fleche" taille={16} /></button>
           </div>
         )}
 

@@ -85,7 +85,26 @@ function App() {
     window.scrollTo(0, 0);
   };
 
-  if (page === 'accueil') return <Accueil onCommencer={() => setPage('auth')} />;
+  // Guide de conseils consultable sans compte (page publique, utile aussi pour le référencement)
+  const ouvrirConseilsPublic = (rubrique = 'generale') => { setOngletConseils(rubrique); setPage('conseils'); window.scrollTo(0, 0); };
+
+  if (page === 'accueil') return <Accueil onCommencer={() => setPage('auth')} onConseils={ouvrirConseilsPublic} />;
+  if (page === 'conseils' && !utilisateur) return (
+    <>
+      <nav className="nav">
+        <div className="conteneur nav-interieur">
+          <Logo onClick={() => setPage('accueil')} />
+          <div className="ligne gap-2">
+            <button className="btn btn-lien desktop-only" onClick={() => setPage('auth')}>Se connecter</button>
+            <button className="btn btn-primaire btn-petit" onClick={() => setPage('auth')}>Commencer</button>
+          </div>
+        </div>
+      </nav>
+      <Suspense fallback={<Chargement />}>
+        <Conseils onRetour={() => setPage('accueil')} libelleRetour="Accueil" ongletInitial={ongletConseils} onCommencer={() => setPage('auth')} />
+      </Suspense>
+    </>
+  );
   if (page === 'auth' || !utilisateur) return <Inscription onConnecte={onConnecte} onRetour={() => setPage('accueil')} />;
 
   const estPro = utilisateur?.abonnement === 'pro';
