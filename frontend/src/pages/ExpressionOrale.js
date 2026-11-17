@@ -3,130 +3,136 @@ import axios from 'axios';
 import sujets from '../data/sujets-expression-orale';
 import API_URL from '../config';
 import { NIVEAU_COULEUR } from '../data/tcfCanada';
+import EntetePage from '../components/EntetePage';
+import CarteCorrection from '../components/CarteCorrection';
+import Icone from '../components/Icone';
 
 // Préparation : 2 min pour la tâche 2 (comme à l'examen) ; 30 s d'échauffement pour les autres tâches en mode entraînement.
 const dureePreparation = sujet => sujet.preparation || 30;
+const formatTemps = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+const compterMots = t => t.trim().split(/\s+/).filter(Boolean).length;
+const NOM_TACHE = { 1: 'Entretien dirigé', 2: 'Exercice en interaction', 3: 'Expression d\'un point de vue' };
 
-function ExpressionOrale({ onRetour })  {
+function ExpressionOrale({ onRetour }) {
+  // choix → preparation → enregistrement → verification → correction
   const [phase, setPhase] = useState('choix');
   const [sujetChoisi, setSujetChoisi] = useState(null);
-  const [enregistrement, setEnregistrement] = useState(false);
-  const [tempsRestant, setTempsRestant] = useState(0);
+  const [tempsPrep, setTempsPrep] = useState(30);
   const [tempsEcoule, setTempsEcoule] = useState(0);
   const [transcription, setTranscription] = useState('');
+  const [audioURL, setAudioURL] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [correction, setCorrection] = useState(null);
-  const [preparation, setPreparation] = useState(true);
-  const [tempsPrep, setTempsPrep] = useState(30);
-  const [audioURL, setAudioURL] = useState(null);
+  const [erreur, setErreur] = useState('');
 
   const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const timerRef = useRef(null);
-  const prepTimerRef = useRef(null);
   const recognitionRef = useRef(null);
+  const actifRef = useRef(false);
 
-  const niveauCouleur = NIVEAU_COULEUR;
-
-  useEffect(() => {
-    return () => {
-      clearInterval(timerRef.current);
-      clearInterval(prepTimerRef.current);
-      if (recognitionRef.current) recognitionRef.current.stop();
-    };
+  // Libère le micro si l'utilisateur quitte la page en cours d'enregistrement
+  useEffect(() => () => {
+    actifRef.current = false;
+    recognitionRef.current?.stop();
+    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
   }, []);
 
-  const commencerPreparation = (sujet) => {
-    setSujetChoisi(sujet);
-    setTempsRestant(sujet.duree);
-    setTempsPrep(dureePreparation(sujet));
-    setPhase('preparation');
-
-    prepTimerRef.current = setInterval(() => {
-      setTempsPrep(t => {
-        if (t <= 1) {
-          clearInterval(prepTimerRef.current);
-          setPreparation(false);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
+  const arreterEnregistrement = () => {
+    if (!actifRef.current) return;
+    actifRef.current = false;
+    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
+    recognitionRef.current?.stop();
+    setPhase('verification');
   };
 
   const demarrerEnregistrement = async () => {
+    setErreur('');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => chunksRef.current.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioURL(URL.createObjectURL(blob));
+      const recorder = new MediaRecorder(stream);
+      const morceaux = [];
+      recorder.ondataavailable = e => morceaux.push(e.data);
+      recorder.onstop = () => {
+        setAudioURL(URL.createObjectURL(new Blob(morceaux, { type: 'audio/webm' })));
         stream.getTracks().forEach(t => t.stop());
       };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
 
-      mediaRecorder.start();
-      setEnregistrement(true);
-      setTempsEcoule(0);
-
-      timerRef.current = setInterval(() => {
-        setTempsEcoule(t => {
-          if (t + 1 >= sujetChoisi.duree) {
-            arreterEnregistrement();
-            return t + 1;
-          }
-          return t + 1;
-        });
-        setTempsRestant(r => Math.max(0, r - 1));
-      }, 1000);
-
-      // Reconnaissance vocale
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SR) {
+        const recognition = new SR();
         recognition.lang = 'fr-CA';
         recognition.continuous = true;
         recognition.interimResults = true;
-
         let texteStable = '';
-        recognition.onresult = (e) => {
-          let interim = '';
+        recognition.onresult = e => {
+          let provisoire = '';
           for (let i = e.resultIndex; i < e.results.length; i++) {
             if (e.results[i].isFinal) texteStable += e.results[i][0].transcript + ' ';
-            else interim += e.results[i][0].transcript;
+            else provisoire += e.results[i][0].transcript;
           }
-          setTranscription(texteStable + interim);
+          setTranscription(texteStable + provisoire);
         };
-
+        // Chrome coupe parfois la reconnaissance après un silence : on la relance tant que l'enregistrement continue
+        recognition.onend = () => { if (actifRef.current) { try { recognition.start(); } catch { /* déjà relancée */ } } };
         recognitionRef.current = recognition;
         recognition.start();
       }
 
-    } catch (err) {
-      alert('Impossible d\'accéder au microphone. Vérifiez les permissions de votre navigateur.');
+      actifRef.current = true;
+      setTranscription('');
+      setAudioURL(null);
+      setTempsEcoule(0);
+      setPhase('enregistrement');
+    } catch {
+      // Micro refusé : on passe directement à la saisie manuelle
+      setErreur('Micro inaccessible. Autorisez le micro dans votre navigateur, ou écrivez ci-dessous ce que vous diriez.');
+      setPhase('verification');
     }
   };
 
-  const arreterEnregistrement = () => {
-    clearInterval(timerRef.current);
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-    if (recognitionRef.current) recognitionRef.current.stop();
-    setEnregistrement(false);
-    setPhase('review');
+  // Références à jour pour les minuteurs
+  const demarrerRef = useRef(demarrerEnregistrement);
+  demarrerRef.current = demarrerEnregistrement;
+  const arreterRef = useRef(arreterEnregistrement);
+  arreterRef.current = arreterEnregistrement;
+
+  // Compte à rebours de préparation, puis démarrage automatique
+  useEffect(() => {
+    if (phase !== 'preparation') return;
+    const id = setInterval(() => setTempsPrep(t => {
+      if (t <= 1) { clearInterval(id); demarrerRef.current(); return 0; }
+      return t - 1;
+    }), 1000);
+    return () => clearInterval(id);
+  }, [phase]);
+
+  // Chronomètre de l'enregistrement, arrêt automatique à la durée cible
+  useEffect(() => {
+    if (phase !== 'enregistrement' || !sujetChoisi) return;
+    const id = setInterval(() => setTempsEcoule(t => {
+      if (t + 1 >= sujetChoisi.duree) { clearInterval(id); arreterRef.current(); }
+      return t + 1;
+    }), 1000);
+    return () => clearInterval(id);
+  }, [phase, sujetChoisi]);
+
+  const choisirSujet = sujet => {
+    setSujetChoisi(sujet);
+    setTempsPrep(dureePreparation(sujet));
+    setTranscription(''); setAudioURL(null); setCorrection(null); setErreur('');
+    setPhase('preparation');
+    window.scrollTo(0, 0);
   };
 
   const soumettrePourCorrection = async () => {
-    if (!transcription.trim()) {
-      alert('La transcription est vide. Assurez-vous que votre microphone fonctionne.');
+    if (compterMots(transcription) < 10) {
+      setErreur('La transcription est trop courte (au moins 10 mots). Vérifiez votre micro ou complétez-la à la main.');
       return;
     }
     setChargement(true);
-    try  { 
+    setErreur('');
+    try {
       const token = localStorage.getItem('token');
       const res = await axios.post(`${API_URL}/api/ia/corriger-oral`, {
         tache: sujetChoisi.tache,
@@ -138,239 +144,157 @@ function ExpressionOrale({ onRetour })  {
       }, { headers: { Authorization: `Bearer ${token}` } });
       setCorrection(res.data);
       setPhase('correction');
+      window.scrollTo(0, 0);
     } catch (err) {
-      alert('Erreur lors de la correction. Vérifiez votre crédit Anthropic.');
+      setErreur(err.response?.data?.message || 'La correction n\'a pas pu être effectuée. Réessayez dans quelques instants.');
     } finally {
       setChargement(false);
     }
   };
 
-  const formatTemps = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-  const pctTemps = sujetChoisi ? Math.min((tempsEcoule / sujetChoisi.duree) * 100, 100) : 0;
+  const recommencer = () => { setPhase('choix'); setTranscription(''); setAudioURL(null); setCorrection(null); setTempsEcoule(0); setErreur(''); };
 
-  // CHOIX DU SUJET
+  // ——— Choix du sujet ———
   if (phase === 'choix') return (
-    <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-      <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '32px 32px 70px', color: '#fff' }}>
-        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-          <button onClick={onRetour} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '14px', marginBottom: '16px', padding: 0 }}>← Retour</button>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px' }}>🎤 Expression orale</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>Enregistrez votre monologue — l'IA transcrit et corrige votre production orale</p>
+    <div>
+      <EntetePage titre="Expression orale" sousTitre="Choisissez une tâche du TCF Canada, parlez au micro : l'IA transcrit, note votre production sur 20 et vous donne votre équivalence NCLC." onRetour={onRetour} />
+      <main className="conteneur chevauche" style={{ maxWidth: 960, paddingBottom: 56 }}>
+        <div className="encadre encadre-info carte" style={{ marginBottom: 24, border: 'none' }}>
+          <Icone nom="micro" taille={18} style={{ flexShrink: 0, marginTop: 2, color: 'var(--action)' }} />
+          <p><strong>Comment ça marche :</strong> préparation, puis enregistrement chronométré, vérification de la transcription et correction par l'IA. La transcription automatique fonctionne dans Chrome et Edge.</p>
         </div>
-      </div>
-      <div style={{ maxWidth: '760px', margin: '-32px auto 0', padding: '0 20px 40px' }}>
-        <div style={{ background: '#E6F1FB', border: '1px solid #B5D4F4', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
-          <p style={{ fontSize: '13px', color: '#0C447C', lineHeight: '1.6' }}>
-            🎙️ <strong>Comment ça marche :</strong> Choisissez un sujet → 30 secondes de préparation → enregistrez votre monologue → l'IA corrige votre production et vous donne un score.
-          </p>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {sujets.map(s => (
-            <div key={s.id} onClick={() => commencerPreparation(s)}
-              style={{ background: '#fff', borderRadius: '14px', padding: '20px 24px', cursor: 'pointer', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '2px solid transparent', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = niveauCouleur[s.niveau]; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: niveauCouleur[s.niveau] }}>{s.tache}</div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <span style={{ background: niveauCouleur[s.niveau] + '20', color: niveauCouleur[s.niveau], fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px' }}>{s.niveau}</span>
-                  <span style={{ background: '#f4f6f8', color: '#666', fontSize: '11px', fontWeight: '600', padding: '3px 10px', borderRadius: '20px' }}>⏱ {formatTemps(s.duree)}</span>
-                </div>
-              </div>
-              <p style={{ fontSize: '14px', color: '#333', lineHeight: '1.6', marginBottom: '8px' }}>{s.sujet}</p>
-              <div style={{ fontSize: '12px', color: '#aaa' }}>Points évalués : {s.points.join(' · ')}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  // PREPARATION
-  if (phase === 'preparation') return (
-    <div style={{ minHeight: '100vh', background: '#f4f6f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ maxWidth: '560px', width: '100%', padding: '20px', textAlign: 'center' }}>
-        <div style={{ background: '#fff', borderRadius: '20px', padding: '40px', boxShadow: '0 8px 40px rgba(0,0,0,0.1)' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🧠</div>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '8px' }}>Temps de préparation</h2>
-          <p style={{ fontSize: '14px', color: '#888', marginBottom: '24px' }}>Préparez mentalement votre réponse</p>
-
-          <div style={{ fontSize: '72px', fontWeight: '800', color: tempsPrep <= 10 ? '#E24B4A' : '#1D9E75', marginBottom: '16px', fontVariantNumeric: 'tabular-nums' }}>
-            {tempsPrep}
-          </div>
-          <div style={{ height: '6px', background: '#f0f0f0', borderRadius: '6px', overflow: 'hidden', marginBottom: '24px' }}>
-            <div style={{ height: '100%', width: `${(tempsPrep / dureePreparation(sujetChoisi)) * 100}%`, background: tempsPrep <= 10 ? '#E24B4A' : '#1D9E75', borderRadius: '6px', transition: 'width 1s linear' }} />
-          </div>
-
-          <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'left' }}>
-            <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.7', fontWeight: '500', marginBottom: '12px' }}>{sujetChoisi.sujet}</p>
-            {sujetChoisi.conseils.map((c, i) => (
-              <p key={i} style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>💡 {c}</p>
-            ))}
-          </div>
-
-          <button onClick={demarrerEnregistrement}
-            style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #D4537E, #993556)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: '700' }}>
-            🎙️ Commencer l'enregistrement
-          </button>
-          {tempsPrep > 0 && (
-            <p style={{ fontSize: '12px', color: '#aaa', marginTop: '10px' }}>L'enregistrement démarrera automatiquement dans {tempsPrep}s</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  // ENREGISTREMENT
-  if (phase === 'preparation' && !preparation || phase === 'enregistrement') return null;
-
-  // REVIEW avant soumission
-  if (phase === 'review') return (
-    <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-      <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '28px 32px 60px', color: '#fff' }}>
-        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '6px' }}>🎙️ Enregistrement terminé</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>Vérifiez votre enregistrement avant de soumettre</p>
-        </div>
-      </div>
-      <div style={{ maxWidth: '760px', margin: '-32px auto 0', padding: '0 20px 40px' }}>
-
-        {/* Stats enregistrement */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
-          {[
-            { val: formatTemps(tempsEcoule), label: 'Durée enregistrée', couleur: '#1D9E75' },
-            { val: formatTemps(sujetChoisi.duree), label: 'Durée cible', couleur: '#378ADD' },
-            { val: transcription.trim().split(/\s+/).filter(m => m.length > 0).length, label: 'Mots détectés', couleur: '#EF9F27' }
-          ].map((s, i) => (
-            <div key={i} style={{ background: '#fff', borderRadius: '12px', padding: '14px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-              <div style={{ fontSize: '22px', fontWeight: '700', color: s.couleur }}>{s.val}</div>
-              <div style={{ fontSize: '11px', color: '#aaa', marginTop: '4px' }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Lecteur audio */}
-        {audioURL && (
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '16px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>🔊 Réécouter votre enregistrement</p>
-            <audio controls src={audioURL} style={{ width: '100%' }} />
-          </div>
-        )}
-
-        {/* Transcription */}
-        <div style={{ background: '#fff', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '16px' }}>
-          <p style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '10px' }}>📝 Transcription automatique</p>
-          {transcription ? (
-            <div>
-              <textarea
-                value={transcription}
-                onChange={e => setTranscription(e.target.value)}
-                style={{ width: '100%', minHeight: '120px', border: '1px solid #eee', borderRadius: '8px', padding: '12px', fontSize: '14px', lineHeight: '1.7', color: '#444', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }}
-              />
-              <p style={{ fontSize: '12px', color: '#aaa', marginTop: '6px' }}>Vous pouvez corriger la transcription si nécessaire avant de soumettre.</p>
-            </div>
-          ) : (
-            <div style={{ background: '#f9fafb', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
-              <p style={{ fontSize: '14px', color: '#888' }}>Aucune transcription détectée.</p>
-              <p style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>Tapez votre texte manuellement ci-dessous ou vérifiez les permissions du microphone.</p>
-              <textarea
-                value={transcription}
-                onChange={e => setTranscription(e.target.value)}
-                placeholder="Tapez ici ce que vous avez dit..."
-                style={{ width: '100%', minHeight: '100px', border: '1px solid #eee', borderRadius: '8px', padding: '12px', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box', marginTop: '10px', resize: 'vertical' }}
-              />
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => { setPhase('choix'); setTranscription(''); setAudioURL(null); setTempsEcoule(0); }}
-            style={{ flex: 1, padding: '14px', background: '#fff', border: '1px solid #ddd', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', color: '#444' }}>
-            Recommencer
-          </button>
-          <button onClick={soumettrePourCorrection} disabled={chargement || !transcription.trim()}
-            style={{ flex: 2, padding: '14px', background: !transcription.trim() || chargement ? '#ccc' : 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: !transcription.trim() || chargement ? 'default' : 'pointer', fontSize: '15px', fontWeight: '700' }}>
-            {chargement ? '⏳ Correction en cours...' : '🤖 Soumettre pour correction IA'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  // CORRECTION
-  if (phase === 'correction' && correction) {
-    const couleurNote = correction.note / correction.note_max >= 0.75 ? '#1D9E75' : correction.note / correction.note_max >= 0.5 ? '#EF9F27' : '#E24B4A';
-    return (
-      <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-        <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '32px 32px 70px', color: '#fff', textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎤</div>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px' }}>Correction orale IA</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>{sujetChoisi.tache}</p>
-        </div>
-        <div style={{ maxWidth: '760px', margin: '-32px auto 0', padding: '0 20px 40px' }}>
-
-          {/* Note */}
-          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '56px', fontWeight: '800', color: couleurNote }}>{correction.note}<span style={{ fontSize: '24px', color: '#aaa' }}>/{correction.note_max}</span></div>
-            <div style={{ display: 'inline-block', marginTop: '8px', background: couleurNote + '20', color: couleurNote, padding: '5px 16px', borderRadius: '20px', fontSize: '15px', fontWeight: '700' }}>
-              Niveau estimé : {correction.niveau_estime}
-            </div>
-          </div>
-
-          {/* Critères détaillés */}
-          {correction.criteres && (
-            <div style={{ background: '#fff', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '12px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#333', marginBottom: '14px' }}>📊 Critères d'évaluation</p>
-              {correction.criteres.map((c, i) => (
-                <div key={i} style={{ marginBottom: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '500' }}>{c.nom}</span>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1D9E75' }}>{c.note}/{c.max}</span>
+        {[1, 2, 3].map(n => (
+          <section key={n} style={{ marginBottom: 28 }}>
+            <h2 className="titre-3" style={{ marginBottom: 12 }}>Tâche {n} · {NOM_TACHE[n]}</h2>
+            <div className="grille grille-2">
+              {sujets.filter(s => s.numeroTache === n).map(s => (
+                <button key={s.id} className="carte carte-cliquable pile" style={{ gap: 10 }} onClick={() => choisirSujet(s)}>
+                  <div className="ligne entre">
+                    <span className="badge"><Icone nom="chrono" taille={12} /> {formatTemps(s.duree)}{s.preparation ? ` · ${s.preparation / 60} min de préparation` : ''}</span>
+                    <span className="badge" style={{ color: NIVEAU_COULEUR[s.niveau] }}>{s.niveau}</span>
                   </div>
-                  <div style={{ height: '5px', background: '#f0f0f0', borderRadius: '5px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(c.note / c.max) * 100}%`, background: '#1D9E75', borderRadius: '5px' }} />
-                  </div>
-                  <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>{c.commentaire}</p>
-                </div>
+                  <p className="texte-2" style={{ lineHeight: 1.6 }}>{s.sujet}</p>
+                  <span className="ligne gap-1 petit gras" style={{ color: 'var(--action)', marginTop: 'auto' }}>Commencer <Icone nom="fleche" taille={14} /></span>
+                </button>
               ))}
             </div>
-          )}
+          </section>
+        ))}
+      </main>
+    </div>
+  );
 
-          {/* Points forts */}
-          <div style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: '14px', padding: '18px 20px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#0F6E56', marginBottom: '10px' }}>✅ Points forts</p>
-            {correction.points_forts?.map((p, i) => <p key={i} style={{ fontSize: '14px', color: '#085041', marginBottom: '4px' }}>• {p}</p>)}
+  // ——— Préparation ———
+  if (phase === 'preparation') {
+    const total = dureePreparation(sujetChoisi);
+    return (
+      <div>
+        <EntetePage surTitre={`${sujetChoisi.tache} · Niveau ${sujetChoisi.niveau}`} titre="Préparez votre réponse" onRetour={recommencer} libelleRetour="Changer de sujet" />
+        <main className="conteneur chevauche" style={{ maxWidth: 720, paddingBottom: 56 }}>
+          <div className="carte centre" style={{ padding: 'clamp(24px, 4vw, 36px)' }}>
+            <div className="chiffres" style={{ fontFamily: 'var(--police-titre)', fontSize: '4rem', fontWeight: 700, lineHeight: 1, color: tempsPrep <= 10 ? 'var(--erreur)' : 'var(--nuit)' }}>{formatTemps(tempsPrep)}</div>
+            <p className="petit texte-3" style={{ margin: '6px 0 16px' }}>L'enregistrement démarrera automatiquement</p>
+            <div className="progression" style={{ marginBottom: 24 }}>
+              <div style={{ width: `${(tempsPrep / total) * 100}%`, background: tempsPrep <= 10 ? 'var(--erreur)' : 'var(--action)', transition: 'width 1s linear' }} />
+            </div>
+            <div className="document" style={{ textAlign: 'left', marginBottom: 16 }}>
+              <p className="etiquette" style={{ marginBottom: 6 }}>Sujet</p>
+              <p style={{ marginBottom: 12 }}>{sujetChoisi.sujet}</p>
+              <ul className="pile gap-1" style={{ listStyle: 'none' }}>
+                {sujetChoisi.conseils.map((c, i) => <li key={i} className="ligne gap-1 petit texte-2" style={{ alignItems: 'flex-start' }}><Icone nom="ampoule" taille={14} style={{ flexShrink: 0, marginTop: 3 }} />{c}</li>)}
+              </ul>
+            </div>
+            <button className="btn btn-primaire btn-grand btn-plein" onClick={demarrerEnregistrement}><Icone nom="micro" taille={18} /> Je suis prêt(e), commencer</button>
           </div>
-
-          {/* Points à améliorer */}
-          <div style={{ background: '#FAEEDA', border: '1px solid #FAC775', borderRadius: '14px', padding: '18px 20px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#854F0B', marginBottom: '10px' }}>⚠️ Points à améliorer</p>
-            {correction.points_ameliorer?.map((p, i) => <p key={i} style={{ fontSize: '14px', color: '#633806', marginBottom: '4px' }}>• {p}</p>)}
-          </div>
-
-          {/* Conseil global */}
-          <div style={{ background: '#E6F1FB', border: '1px solid #B5D4F4', borderRadius: '14px', padding: '18px 20px', marginBottom: '20px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#185FA5', marginBottom: '8px' }}>💡 Conseil de votre professeur IA</p>
-            <p style={{ fontSize: '14px', color: '#0C447C', lineHeight: '1.7' }}>{correction.conseils}</p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => { setPhase('choix'); setTranscription(''); setAudioURL(null); setCorrection(null); setTempsEcoule(0); }}
-              style={{ flex: 1, padding: '14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>
-              Autre sujet
-            </button>
-            <button onClick={onRetour}
-              style={{ flex: 1, padding: '14px', background: '#fff', border: '1px solid #ddd', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', color: '#444' }}>
-              Dashboard
-            </button>
-          </div>
-        </div>
+        </main>
       </div>
     );
   }
 
-  return <div style={{ padding: '40px', textAlign: 'center' }}>Chargement...</div>;
+  // ——— Enregistrement ———
+  if (phase === 'enregistrement') {
+    const restant = Math.max(0, sujetChoisi.duree - tempsEcoule);
+    return (
+      <div>
+        <EntetePage surTitre={`${sujetChoisi.tache} · Niveau ${sujetChoisi.niveau}`} titre="Enregistrement en cours" />
+        <main className="conteneur chevauche" style={{ maxWidth: 720, paddingBottom: 56 }}>
+          <div className="carte centre" style={{ padding: 'clamp(24px, 4vw, 36px)' }}>
+            <span className="badge" style={{ background: 'var(--erable-pale)', color: 'var(--erreur)', marginBottom: 12 }}>● Enregistrement</span>
+            <div className="chiffres" style={{ fontFamily: 'var(--police-titre)', fontSize: '4rem', fontWeight: 700, lineHeight: 1 }}>{formatTemps(restant)}</div>
+            <p className="petit texte-3" style={{ margin: '6px 0 16px' }}>temps restant</p>
+            <div className="progression" style={{ marginBottom: 20 }}>
+              <div style={{ width: `${(tempsEcoule / sujetChoisi.duree) * 100}%`, background: 'var(--eo)', transition: 'width 1s linear' }} />
+            </div>
+            <div className="document" style={{ textAlign: 'left', marginBottom: 20, minHeight: 80 }}>
+              <p className="etiquette" style={{ marginBottom: 6 }}>Transcription en direct</p>
+              <p className="texte-2">{transcription || 'Parlez, votre texte apparaîtra ici…'}</p>
+            </div>
+            <button className="btn btn-nuit btn-grand btn-plein" onClick={arreterEnregistrement}><Icone nom="coche" taille={18} /> J'ai terminé</button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ——— Vérification avant correction ———
+  if (phase === 'verification') {
+    const mots = compterMots(transcription);
+    return (
+      <div>
+        <EntetePage surTitre={sujetChoisi.tache} titre="Vérifiez votre réponse" sousTitre="Réécoutez-vous et corrigez la transcription si la reconnaissance vocale s'est trompée." />
+        <main className="conteneur chevauche" style={{ maxWidth: 820, paddingBottom: 56 }}>
+          <div className="grille grille-3" style={{ marginBottom: 16 }}>
+            {[[formatTemps(tempsEcoule), 'Durée enregistrée'], [formatTemps(sujetChoisi.duree), 'Durée visée'], [mots, 'Mots transcrits']].map(([val, label]) => (
+              <div key={label} className="carte centre" style={{ padding: 16 }}>
+                <div className="chiffres" style={{ fontFamily: 'var(--police-titre)', fontSize: '1.6rem', fontWeight: 700 }}>{val}</div>
+                <div className="petit texte-3">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {audioURL && (
+            <div className="carte" style={{ marginBottom: 16 }}>
+              <p className="titre-3" style={{ marginBottom: 10 }}>Réécouter votre enregistrement</p>
+              <audio controls src={audioURL} style={{ width: '100%' }} />
+            </div>
+          )}
+
+          <div className="carte" style={{ marginBottom: 16 }}>
+            <label htmlFor="transcription" className="titre-3" style={{ display: 'block', marginBottom: 10 }}>
+              {transcription ? 'Transcription automatique' : 'Votre réponse'}
+            </label>
+            <textarea id="transcription" className="zone-texte" style={{ minHeight: 160 }} value={transcription} onChange={e => setTranscription(e.target.value)}
+              placeholder="Aucune transcription détectée. Écrivez ici ce que vous avez dit…" />
+          </div>
+
+          {erreur && <div className="message-erreur" role="alert" style={{ marginBottom: 12 }}>{erreur}</div>}
+          <div className="ligne envelopper gap-2">
+            <button className="btn btn-contour btn-grand" style={{ flex: '1 1 160px' }} onClick={() => choisirSujet(sujetChoisi)}>Recommencer l'enregistrement</button>
+            <button className="btn btn-primaire btn-grand" style={{ flex: '2 1 240px' }} onClick={soumettrePourCorrection} disabled={chargement || mots < 10}>
+              {chargement ? 'Correction en cours…' : <><Icone nom="etincelle" taille={18} /> Faire corriger par l'IA</>}
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ——— Correction ———
+  if (phase === 'correction' && correction) return (
+    <div>
+      <EntetePage surTitre={sujetChoisi.tache} titre="Votre correction" onRetour={onRetour} />
+      <main className="conteneur chevauche" style={{ maxWidth: 820, paddingBottom: 56 }}>
+        <CarteCorrection correction={correction} section="expression-orale" />
+        <div className="ligne envelopper gap-2" style={{ marginTop: 20 }}>
+          <button className="btn btn-primaire" style={{ flex: '1 1 160px' }} onClick={() => choisirSujet(sujetChoisi)}>Refaire ce sujet</button>
+          <button className="btn btn-contour" style={{ flex: '1 1 160px' }} onClick={recommencer}>Autre sujet</button>
+          <button className="btn btn-contour" style={{ flex: '1 1 160px' }} onClick={onRetour}>Tableau de bord</button>
+        </div>
+      </main>
+    </div>
+  );
+
+  return null;
 }
 
 export default ExpressionOrale;

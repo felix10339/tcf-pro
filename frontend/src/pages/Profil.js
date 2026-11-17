@@ -1,344 +1,302 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
+import Icone from '../components/Icone';
+
+const SECTIONS = [
+  { key: 'comprehension-orale', label: 'Compréhension orale', icone: 'casque', couleur: 'var(--co)' },
+  { key: 'comprehension-ecrite', label: 'Compréhension écrite', icone: 'livre', couleur: 'var(--ce)' },
+  { key: 'expression-ecrite', label: 'Expression écrite', icone: 'stylo', couleur: 'var(--ee)' },
+  { key: 'expression-orale', label: 'Expression orale', icone: 'micro', couleur: 'var(--eo)' }
+];
+
+const ONGLETS = [
+  { key: 'apercu', label: 'Aperçu' },
+  { key: 'progression', label: 'Progression' },
+  { key: 'compte', label: 'Mon compte' },
+  { key: 'abonnement', label: 'Abonnement' }
+];
+
+const AVANTAGES_PRO = [
+  'Examen blanc complet au format officiel, avec résultat en NCLC',
+  'Expression écrite : 3 tâches corrigées par IA',
+  'Expression orale : 3 tâches corrigées par IA',
+  'Explication personnalisée par IA après chaque réponse'
+];
 
 function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
   const [stats, setStats] = useState(null);
-  const [historique, setHistorique] = useState([]);
   const [onglet, setOnglet] = useState('apercu');
   const [modifNom, setModifNom] = useState(false);
   const [nouveauNom, setNouveauNom] = useState(utilisateur.nom);
   const [ancienMDP, setAncienMDP] = useState('');
   const [nouveauMDP, setNouveauMDP] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(null); // { type: 'succes' | 'erreur', texte }
   const [chargement, setChargement] = useState(false);
-  const estPro = utilisateur?.abonnement === 'pro';
   const [chargementPortail, setChargementPortail] = useState(false);
-  const [erreurPortail, setErreurPortail] = useState('');
+  const estPro = utilisateur?.abonnement === 'pro';
+
+  const afficher = (type, texte, duree = 4000) => {
+    setMessage({ type, texte });
+    setTimeout(() => setMessage(null), duree);
+  };
 
   // Ouvre le portail client Stripe (carte, factures, changement de forfait, annulation)
   const ouvrirPortail = async () => {
     setChargementPortail(true);
-    setErreurPortail('');
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(`${API_URL}/api/paiement/portail`, {}, { headers: { Authorization: `Bearer ${token}` } });
       window.location.href = res.data.url;
     } catch (err) {
-      setErreurPortail(err.response?.data?.message || 'Impossible d\'ouvrir la gestion de l\'abonnement.');
+      afficher('erreur', err.response?.data?.message || 'Impossible d\'ouvrir la gestion de l\'abonnement.');
       setChargementPortail(false);
     }
   };
 
   useEffect(() => {
-    const s = localStorage.getItem(`stats-${utilisateur.id}`);
-    if (s) setStats(JSON.parse(s));
-    const h = localStorage.getItem(`historique-${utilisateur.id}`);
-    if (h) setHistorique(JSON.parse(h));
+    try {
+      const s = localStorage.getItem(`stats-${utilisateur.id}`);
+      if (s) setStats(JSON.parse(s));
+    } catch { /* statistiques illisibles */ }
   }, [utilisateur.id]);
 
-  const tauxReussite = stats?.totalQuestions > 0
-    ? Math.round((stats.bonnesReponses / stats.totalQuestions) * 100)
-    : 0;
-
-  const niveau = tauxReussite >= 80 ? 'C1' : tauxReussite >= 60 ? 'B2' : tauxReussite >= 40 ? 'B1' : 'A2';
-  const couleurNiveau = { C1: '#1D9E75', B2: '#378ADD', B1: '#EF9F27', A2: '#E24B4A' }[niveau];
-
-  const sections = [
-    { key: 'comprehension-ecrite', label: 'Compréhension écrite', emoji: '📖', couleur: '#378ADD' },
-    { key: 'comprehension-orale', label: 'Compréhension orale', emoji: '🎧', couleur: '#1D9E75' },
-    { key: 'expression-ecrite', label: 'Expression écrite', emoji: '✍️', couleur: '#EF9F27' },
-    { key: 'expression-orale', label: 'Expression orale', emoji: '🎤', couleur: '#D4537E' }
-  ];
+  const tauxReussite = stats?.totalQuestions > 0 ? Math.round((stats.bonnesReponses / stats.totalQuestions) * 100) : 0;
+  const niveau = !stats?.totalQuestions ? '—' : tauxReussite >= 80 ? 'C1' : tauxReussite >= 60 ? 'B2' : tauxReussite >= 40 ? 'B1' : 'A2';
 
   const sauvegarderNom = async () => {
     if (!nouveauNom.trim()) return;
     setChargement(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_URL}/api/auth/modifier-profil`,
-        { nom: nouveauNom },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(`${API_URL}/api/auth/modifier-profil`, { nom: nouveauNom }, { headers: { Authorization: `Bearer ${token}` } });
       const u = { ...utilisateur, nom: nouveauNom };
       localStorage.setItem('utilisateur', JSON.stringify(u));
       onMisAJour(u);
       setModifNom(false);
-      setMessage('✅ Nom modifié avec succès');
+      afficher('succes', 'Votre nom a été modifié.');
     } catch {
-      setMessage('❌ Erreur lors de la modification');
+      afficher('erreur', 'La modification n\'a pas pu être enregistrée.');
     } finally {
       setChargement(false);
-      setTimeout(() => setMessage(''), 3000);
     }
   };
 
-  const changerMotDePasse = async () => {
-    if (!ancienMDP || !nouveauMDP) { setMessage('❌ Remplissez tous les champs'); return; }
-    if (nouveauMDP.length < 6) { setMessage('❌ Mot de passe trop court (6 caractères min)'); return; }
+  const changerMotDePasse = async (e) => {
+    e?.preventDefault();
+    if (!ancienMDP || !nouveauMDP) { afficher('erreur', 'Remplissez les deux champs.'); return; }
+    if (nouveauMDP.length < 6) { afficher('erreur', 'Le nouveau mot de passe doit contenir au moins 6 caractères.'); return; }
     setChargement(true);
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API_URL}/api/auth/changer-mot-de-passe`,
         { ancienMotDePasse: ancienMDP, nouveauMotDePasse: nouveauMDP },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setAncienMDP('');
-      setNouveauMDP('');
-      setMessage('✅ Mot de passe modifié avec succès');
+        { headers: { Authorization: `Bearer ${token}` } });
+      setAncienMDP(''); setNouveauMDP('');
+      afficher('succes', 'Votre mot de passe a été modifié.');
     } catch (err) {
-      setMessage(err.response?.data?.message || '❌ Erreur lors du changement');
+      afficher('erreur', err.response?.data?.message || 'Le changement de mot de passe a échoué.');
     } finally {
       setChargement(false);
-      setTimeout(() => setMessage(''), 4000);
     }
   };
 
-  const inputStyle = {
-    width: '100%', padding: '11px 14px',
-    border: '1.5px solid #e5e7eb',
-    borderRadius: '10px', fontSize: '14px',
-    background: '#fafafa', boxSizing: 'border-box'
-  };
-
-  const onglets = [
-    { key: 'apercu', label: '📊 Aperçu' },
-    { key: 'progression', label: '📈 Progression' },
-    { key: 'compte', label: '⚙️ Mon compte' },
-    { key: 'abonnement', label: '💳 Abonnement' }
-  ];
+  const dateFin = utilisateur.dateFinAbonnement
+    ? new Date(utilisateur.dateFinAbonnement).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-
-      <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '32px 32px 80px', color: '#fff' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <button onClick={onRetour} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '14px', marginBottom: '24px', padding: 0 }}>
-            ← Retour au tableau de bord
+    <div>
+      <header className="entete-page">
+        <div className="conteneur" style={{ position: 'relative', zIndex: 1, maxWidth: 860 }}>
+          <button className="btn btn-lien btn-petit" onClick={onRetour} style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 14, paddingLeft: 0 }}>
+            <Icone nom="retour" taille={16} /> Tableau de bord
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: '800', color: '#fff', flexShrink: 0, boxShadow: '0 4px 20px rgba(29,158,117,0.4)' }}>
-              {utilisateur.nom.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>{utilisateur.nom}</h2>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '8px' }}>{utilisateur.email}</p>
-              <span style={{ background: estPro ? 'rgba(29,158,117,0.3)' : 'rgba(255,255,255,0.1)', border: `1px solid ${estPro ? 'rgba(29,158,117,0.5)' : 'rgba(255,255,255,0.2)'}`, color: estPro ? '#4ECDA4' : 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: '700', padding: '4px 12px', borderRadius: '20px' }}>
-                {estPro ? '✅ Membre Pro' : '🆓 Compte gratuit'}
+          <div className="ligne gap-3">
+            <span className="avatar" style={{ width: 64, height: 64, fontSize: '1.6rem', background: 'var(--action)' }}>{utilisateur.nom.charAt(0).toUpperCase()}</span>
+            <div style={{ minWidth: 0 }}>
+              <h1 className="titre-1" style={{ marginBottom: 2 }}>{utilisateur.nom}</h1>
+              <p className="petit" style={{ opacity: 0.7, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis' }}>{utilisateur.email}</p>
+              <span className={`badge ${estPro ? 'badge-succes' : ''}`} style={estPro ? undefined : { background: 'rgba(255,255,255,0.12)', color: '#fff' }}>
+                {estPro ? <><Icone nom="etoile" taille={12} /> Membre Pro</> : 'Compte gratuit'}
               </span>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div style={{ maxWidth: '800px', margin: '-48px auto 0', padding: '0 20px 40px' }}>
-
-        <div style={{ background: '#fff', borderRadius: '14px', padding: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '20px', display: 'flex', gap: '4px' }}>
-          {onglets.map(o => (
-            <button key={o.key} onClick={() => setOnglet(o.key)}
-              style={{ flex: 1, padding: '10px 8px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: onglet === o.key ? '700' : '500', background: onglet === o.key ? '#f0f2f5' : 'transparent', color: onglet === o.key ? '#1a1a2e' : '#6b7280', transition: 'all 0.18s', transform: 'none' }}>
-              {o.label}
-            </button>
-          ))}
+      <main className="conteneur chevauche" style={{ maxWidth: 860, paddingBottom: 56 }}>
+        <div className="carte" style={{ padding: '0 12px', marginBottom: 20 }}>
+          <nav className="onglets" style={{ borderBottom: 'none' }} role="tablist">
+            {ONGLETS.map(o => (
+              <button key={o.key} role="tab" aria-selected={onglet === o.key} className={`onglet${onglet === o.key ? ' actif' : ''}`} onClick={() => setOnglet(o.key)}>{o.label}</button>
+            ))}
+          </nav>
         </div>
 
         {message && (
-          <div style={{ background: message.includes('✅') ? '#E1F5EE' : '#FCEBEB', border: `1px solid ${message.includes('✅') ? '#9FE1CB' : '#F09595'}`, borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', fontSize: '14px', color: message.includes('✅') ? '#085041' : '#A32D2D', fontWeight: '500' }}>
-            {message}
+          <div className={message.type === 'succes' ? 'encadre encadre-succes' : 'message-erreur'} role="status" style={{ marginBottom: 16 }}>
+            <Icone nom={message.type === 'succes' ? 'coche' : 'croix'} taille={16} style={{ flexShrink: 0, marginTop: 2 }} /> {message.texte}
           </div>
         )}
 
+        {/* ——— Aperçu ——— */}
         {onglet === 'apercu' && (
-          <div className="animate-fade">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+          <div className="pile gap-3 apparaitre">
+            <div className="grille grille-3">
               {[
-                { val: niveau, label: 'Niveau estimé', couleur: couleurNiveau, sub: 'TCF général' },
-                { val: `${tauxReussite}%`, label: 'Taux de réussite', couleur: '#378ADD', sub: `${stats?.totalQuestions || 0} questions` },
-                { val: stats?.bonnesReponses || 0, label: 'Bonnes réponses', couleur: '#1D9E75', sub: 'au total' }
-              ].map((s, i) => (
-                <div key={i} style={{ background: '#fff', borderRadius: '14px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: s.couleur, lineHeight: 1, marginBottom: '6px' }}>{s.val}</div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a2e', marginBottom: '2px' }}>{s.label}</div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af' }}>{s.sub}</div>
+                { val: niveau, label: 'Niveau indicatif', sous: 'selon vos exercices' },
+                { val: `${tauxReussite} %`, label: 'Taux de réussite', sous: `${stats?.totalQuestions || 0} questions` },
+                { val: stats?.bonnesReponses || 0, label: 'Bonnes réponses', sous: 'au total' }
+              ].map(s => (
+                <div key={s.label} className="carte centre">
+                  <div className="chiffres" style={{ fontFamily: 'var(--police-titre)', fontSize: '2rem', fontWeight: 700, lineHeight: 1.1 }}>{s.val}</div>
+                  <div className="gras petit" style={{ marginTop: 4 }}>{s.label}</div>
+                  <div className="tres-petit texte-3">{s.sous}</div>
                 </div>
               ))}
             </div>
-            <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px' }}>🕐 Activité récente</h3>
+            <div className="carte">
+              <h2 className="titre-3" style={{ marginBottom: 14 }}>Activité récente</h2>
               {stats?.totalQuestions > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {sections.filter(s => stats?.sections?.[s.key]?.total > 0).map((s, i) => {
+                <div className="pile gap-2">
+                  {SECTIONS.filter(s => stats?.sections?.[s.key]?.total > 0).map(s => {
                     const sec = stats.sections[s.key];
                     const taux = Math.round((sec.bonnes / sec.total) * 100);
                     return (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
-                        <div style={{ width: '36px', height: '36px', background: s.couleur + '20', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>{s.emoji}</div>
+                      <div key={s.key} className="ligne gap-3" style={{ padding: 12, background: 'var(--surface-2)', borderRadius: 'var(--rayon-sm)' }}>
+                        <span className="pastille-icone" style={{ width: 36, height: 36, background: 'var(--surface)', color: s.couleur }}><Icone nom={s.icone} taille={17} /></span>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>{s.label}</div>
-                          <div style={{ height: '4px', background: '#e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${taux}%`, background: s.couleur, borderRadius: '4px' }} />
-                          </div>
+                          <div className="gras petit" style={{ marginBottom: 6 }}>{s.label}</div>
+                          <div className="progression"><div style={{ width: `${taux}%`, background: s.couleur }} /></div>
                         </div>
-                        <div style={{ fontSize: '13px', fontWeight: '700', color: s.couleur }}>{taux}%</div>
-                        <div style={{ fontSize: '12px', color: '#9ca3af' }}>{sec.total} qst</div>
+                        <div className="centre"><div className="gras chiffres">{taux} %</div><div className="tres-petit texte-3">{sec.total} questions</div></div>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '30px', color: '#9ca3af' }}>
-                  <div style={{ fontSize: '36px', marginBottom: '8px' }}>📚</div>
-                  <p style={{ fontSize: '14px' }}>Vous n'avez pas encore fait d'exercices</p>
-                </div>
+                <p className="centre texte-3" style={{ padding: 24 }}>Vous n'avez pas encore fait d'exercices.</p>
               )}
             </div>
           </div>
         )}
 
+        {/* ——— Progression ——— */}
         {onglet === 'progression' && (
-          <div className="animate-fade">
-            <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '20px' }}>📈 Progression par compétence</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {sections.map((s, i) => {
+          <div className="pile gap-3 apparaitre">
+            <div className="carte">
+              <h2 className="titre-3" style={{ marginBottom: 18 }}>Progression par compétence</h2>
+              <div className="pile gap-4" style={{ gap: 22 }}>
+                {SECTIONS.map(s => {
                   const sec = stats?.sections?.[s.key] || { total: 0, bonnes: 0 };
                   const taux = sec.total > 0 ? Math.round((sec.bonnes / sec.total) * 100) : 0;
-                  const accessible = s.key === 'comprehension-ecrite' || s.key === 'comprehension-orale' || estPro;
+                  const accessible = s.key.startsWith('comprehension') || estPro;
                   return (
-                    <div key={i}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '16px' }}>{s.emoji}</span>
-                          <span style={{ fontSize: '14px', fontWeight: '600' }}>{s.label}</span>
-                          {!accessible && <span style={{ fontSize: '10px', background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: '10px', fontWeight: '600' }}>🔒 Pro</span>}
-                        </div>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                          <span style={{ fontSize: '12px', color: '#9ca3af' }}>{sec.bonnes}/{sec.total}</span>
-                          <span style={{ fontSize: '15px', fontWeight: '800', color: accessible ? s.couleur : '#d1d5db' }}>{taux}%</span>
-                        </div>
+                    <div key={s.key}>
+                      <div className="ligne entre" style={{ marginBottom: 8 }}>
+                        <span className="ligne gap-2 gras">
+                          <span style={{ color: s.couleur, display: 'inline-flex' }}><Icone nom={s.icone} taille={18} /></span>{s.label}
+                          {!accessible && <span className="badge badge-alerte"><Icone nom="cadenas" taille={11} /> Pro</span>}
+                        </span>
+                        <span className="ligne gap-2"><span className="petit texte-3 chiffres">{sec.bonnes}/{sec.total}</span><strong className="chiffres">{taux} %</strong></span>
                       </div>
-                      <div style={{ height: '8px', background: '#f3f4f6', borderRadius: '8px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${taux}%`, background: accessible ? s.couleur : '#e5e7eb', borderRadius: '8px', transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)' }} />
-                      </div>
+                      <div className="progression" style={{ height: 8 }}><div style={{ width: `${taux}%`, background: accessible ? s.couleur : 'var(--bordure-forte)' }} /></div>
                     </div>
                   );
                 })}
               </div>
             </div>
-            <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43)', borderRadius: '14px', padding: '22px', color: '#fff' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>🎯 Objectif TCF</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+            <div className="carte carte-nuit">
+              <h2 className="titre-3" style={{ marginBottom: 14, color: '#fff' }}>Niveau indicatif</h2>
+              <div className="grille grille-4" style={{ gap: 8 }}>
                 {['A2', 'B1', 'B2', 'C1'].map(n => (
-                  <div key={n} style={{ textAlign: 'center', padding: '12px 8px', borderRadius: '10px', background: niveau === n ? 'rgba(29,158,117,0.3)' : 'rgba(255,255,255,0.05)', border: `1px solid ${niveau === n ? 'rgba(29,158,117,0.5)' : 'rgba(255,255,255,0.1)'}` }}>
-                    <div style={{ fontSize: '18px', fontWeight: '800', color: niveau === n ? '#4ECDA4' : 'rgba(255,255,255,0.5)' }}>{n}</div>
-                    {niveau === n && <div style={{ fontSize: '10px', color: '#4ECDA4', marginTop: '2px' }}>Niveau actuel</div>}
+                  <div key={n} className="centre" style={{ padding: '12px 8px', borderRadius: 'var(--rayon-sm)', background: niveau === n ? 'var(--action)' : 'rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontFamily: 'var(--police-titre)', fontSize: '1.3rem', fontWeight: 700, opacity: niveau === n ? 1 : 0.5 }}>{n}</div>
+                    {niveau === n && <div className="tres-petit">Niveau actuel</div>}
                   </div>
                 ))}
               </div>
+              <p className="petit" style={{ opacity: 0.7, marginTop: 12 }}>Pour connaître votre NCLC, passez un examen blanc complet.</p>
             </div>
           </div>
         )}
 
+        {/* ——— Mon compte ——— */}
         {onglet === 'compte' && (
-          <div className="animate-fade">
-            <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px' }}>👤 Informations personnelles</h3>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nom complet</label>
+          <div className="pile gap-3 apparaitre">
+            <div className="carte pile gap-3">
+              <h2 className="titre-3">Informations personnelles</h2>
+              <div className="champ-groupe">
+                <label className="champ-label" htmlFor="nom-profil">Nom complet</label>
                 {modifNom ? (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input value={nouveauNom} onChange={e => setNouveauNom(e.target.value)} style={inputStyle} />
-                    <button onClick={sauvegarderNom} disabled={chargement} style={{ padding: '11px 16px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap' }}>
-                      {chargement ? '...' : 'Sauver'}
-                    </button>
-                    <button onClick={() => setModifNom(false)} style={{ padding: '11px 16px', background: '#f3f4f6', color: '#444', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                      Annuler
-                    </button>
+                  <div className="ligne gap-2 envelopper">
+                    <input id="nom-profil" className="champ" style={{ flex: '1 1 220px' }} value={nouveauNom} onChange={e => setNouveauNom(e.target.value)} autoComplete="name" />
+                    <button className="btn btn-nuit" onClick={sauvegarderNom} disabled={chargement}>{chargement ? '…' : 'Enregistrer'}</button>
+                    <button className="btn btn-contour" onClick={() => { setModifNom(false); setNouveauNom(utilisateur.nom); }}>Annuler</button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 14px', background: '#f9fafb', borderRadius: '10px', border: '1.5px solid #e5e7eb' }}>
-                    <span style={{ fontSize: '14px' }}>{utilisateur.nom}</span>
-                    <button onClick={() => setModifNom(true)} style={{ fontSize: '12px', color: '#1D9E75', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600', transform: 'none' }}>
-                      Modifier
-                    </button>
+                  <div className="champ ligne entre" style={{ background: 'var(--surface-2)' }}>
+                    <span>{utilisateur.nom}</span>
+                    <button className="btn-lien gras" style={{ background: 'none', border: 'none', color: 'var(--action)' }} onClick={() => setModifNom(true)}>Modifier</button>
                   </div>
                 )}
               </div>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email</label>
-                <div style={{ padding: '11px 14px', background: '#f9fafb', borderRadius: '10px', border: '1.5px solid #e5e7eb', fontSize: '14px', color: '#9ca3af' }}>
-                  {utilisateur.email} <span style={{ fontSize: '11px', marginLeft: '8px' }}>(non modifiable)</span>
-                </div>
+              <div className="champ-groupe">
+                <span className="champ-label">Adresse courriel</span>
+                <div className="champ texte-3" style={{ background: 'var(--surface-2)' }}>{utilisateur.email} <span className="tres-petit">(non modifiable)</span></div>
               </div>
             </div>
 
-            <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px' }}>🔒 Changer le mot de passe</h3>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mot de passe actuel</label>
-                <input type="password" value={ancienMDP} onChange={e => setAncienMDP(e.target.value)} placeholder="••••••••" style={inputStyle} />
+            <form className="carte pile gap-3" onSubmit={changerMotDePasse}>
+              <h2 className="titre-3">Changer le mot de passe</h2>
+              <input type="text" name="username" autoComplete="username" value={utilisateur.email} readOnly hidden />
+              <div className="champ-groupe">
+                <label className="champ-label" htmlFor="mdp-actuel">Mot de passe actuel</label>
+                <input id="mdp-actuel" className="champ" type="password" autoComplete="current-password" value={ancienMDP} onChange={e => setAncienMDP(e.target.value)} placeholder="••••••••" />
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nouveau mot de passe</label>
-                <input type="password" value={nouveauMDP} onChange={e => setNouveauMDP(e.target.value)} placeholder="6 caractères minimum" style={inputStyle} />
+              <div className="champ-groupe">
+                <label className="champ-label" htmlFor="mdp-nouveau">Nouveau mot de passe</label>
+                <input id="mdp-nouveau" className="champ" type="password" autoComplete="new-password" value={nouveauMDP} onChange={e => setNouveauMDP(e.target.value)} placeholder="6 caractères minimum" />
               </div>
-              <button onClick={changerMotDePasse} disabled={chargement} style={{ width: '100%', padding: '13px', background: chargement ? '#e5e7eb' : 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: chargement ? '#9ca3af' : '#fff', border: 'none', borderRadius: '10px', cursor: chargement ? 'default' : 'pointer', fontSize: '14px', fontWeight: '700' }}>
-                {chargement ? 'Modification...' : 'Changer le mot de passe'}
-              </button>
-            </div>
+              <button type="submit" className="btn btn-nuit btn-plein" disabled={chargement}>{chargement ? 'Modification…' : 'Changer le mot de passe'}</button>
+            </form>
           </div>
         )}
 
+        {/* ——— Abonnement ——— */}
         {onglet === 'abonnement' && (
-          <div className="animate-fade">
-            <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '20px' }}>💳 Mon abonnement</h3>
-              <div style={{ background: estPro ? 'linear-gradient(135deg, #0f2027, #203a43)' : '#f9fafb', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: estPro ? 'none' : '1.5px solid #e5e7eb' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '18px', fontWeight: '800', color: estPro ? '#fff' : '#1a1a2e', marginBottom: '4px' }}>
-                      {estPro ? '⭐ Plan Pro' : '🆓 Plan Gratuit'}
-                    </div>
-                    <div style={{ fontSize: '13px', color: estPro ? 'rgba(255,255,255,0.6)' : '#9ca3af' }}>
-                      {estPro ? `Plan ${utilisateur.plan || 'mensuel'} — Toutes fonctionnalités incluses` : 'Compréhension écrite et orale uniquement'}
-                    </div>
-                    {estPro && utilisateur.dateFinAbonnement && (
-                      <div style={{ fontSize: '12px', color: '#4ECDA4', marginTop: '6px', fontWeight: '600' }}>
-                        ✅ Période en cours jusqu'au {new Date(utilisateur.dateFinAbonnement).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '36px' }}>{estPro ? '✅' : '🔓'}</div>
-                </div>
-              </div>
-              {!estPro && (
-                <button onClick={onTarifs} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: '700', boxShadow: '0 4px 14px rgba(29,158,117,0.3)' }}>
-                  ⭐ Passer à la version Pro →
-                </button>
-              )}
-              {estPro && (
-                <>
-                  <button onClick={ouvrirPortail} disabled={chargementPortail} className="btn btn-nuit btn-plein" style={{ marginBottom: '8px' }}>
-                    {chargementPortail ? 'Ouverture…' : 'Gérer mon abonnement'}
-                  </button>
-                  <p style={{ fontSize: '12px', color: '#6b7280', textAlign: 'center', marginBottom: '16px' }}>
-                    Carte bancaire, factures, changement de forfait ou annulation, sur la page sécurisée de Stripe.
+          <div className="pile gap-3 apparaitre">
+            <div className={`carte${estPro ? ' carte-nuit' : ''}`}>
+              <div className="ligne entre gap-3 envelopper">
+                <div>
+                  <p className="etiquette" style={{ color: estPro ? 'rgba(255,255,255,0.6)' : undefined, marginBottom: 4 }}>Votre forfait</p>
+                  <h2 className="titre-2" style={{ color: estPro ? '#fff' : undefined }}>{estPro ? `TCF Pro · ${utilisateur.plan || 'mensuel'}` : 'Gratuit'}</h2>
+                  <p className="petit" style={{ opacity: 0.75, marginTop: 4 }}>
+                    {estPro ? (dateFin ? `Période en cours jusqu'au ${dateFin}` : 'Toutes les fonctionnalités incluses') : 'Compréhension écrite et orale'}
                   </p>
-                  {erreurPortail && <div className="message-erreur" style={{ marginBottom: '16px' }}>{erreurPortail}</div>}
-                </>
-              )}
-              {estPro && (
-                <div style={{ background: '#E1F5EE', borderRadius: '10px', padding: '14px 16px' }}>
-                  <p style={{ fontSize: '13px', color: '#0F6E56', fontWeight: '600', marginBottom: '8px' }}>✅ Fonctionnalités incluses dans votre plan :</p>
-                  {['Compréhension écrite et orale illimitées', 'Expression écrite avec correction IA', 'Expression orale avec correction IA', 'Simulateur d\'examen complet (4 épreuves)', 'Explications IA après chaque réponse'].map((f, i) => (
-                    <div key={i} style={{ fontSize: '13px', color: '#085041', marginBottom: '4px' }}>✓ {f}</div>
-                  ))}
                 </div>
-              )}
+                {estPro
+                  ? <button className="btn btn-clair" onClick={ouvrirPortail} disabled={chargementPortail}>{chargementPortail ? 'Ouverture…' : 'Gérer mon abonnement'}</button>
+                  : <button className="btn btn-primaire" onClick={onTarifs}>Passer Pro <Icone nom="fleche" taille={16} /></button>}
+              </div>
+              {estPro && <p className="tres-petit" style={{ opacity: 0.6, marginTop: 14 }}>Carte bancaire, factures, changement de forfait ou annulation, sur la page sécurisée de Stripe.</p>}
+            </div>
+
+            <div className="carte">
+              <h2 className="titre-3" style={{ marginBottom: 12 }}>{estPro ? 'Inclus dans votre forfait' : 'Ce que débloque le forfait Pro'}</h2>
+              <ul className="pile gap-2" style={{ listStyle: 'none' }}>
+                {AVANTAGES_PRO.map(a => (
+                  <li key={a} className="ligne gap-2" style={{ alignItems: 'flex-start' }}>
+                    <Icone nom={estPro ? 'coche' : 'cadenas'} taille={16} style={{ flexShrink: 0, marginTop: 3, color: estPro ? 'var(--succes)' : 'var(--texte-3)' }} />
+                    <span className="texte-2">{a}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

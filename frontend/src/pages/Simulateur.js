@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import AudioPlayer from '../components/AudioPlayer';
 import API_URL from '../config';
+import EntetePage from '../components/EntetePage';
+import Icone from '../components/Icone';
 import sujetsEE from '../data/sujets-expression-ecrite';
 import sujetsEO from '../data/sujets-expression-orale';
 import {
@@ -15,10 +17,9 @@ const tirerSujets = sujets => [1, 2, 3].map(n => auHasard(sujets.filter(s => s.n
 const compterMots = t => t.trim().split(/\s+/).filter(Boolean).length;
 const formatTemps = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 const enteteAuth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const ICONE = { 'comprehension-orale': 'casque', 'comprehension-ecrite': 'livre', 'expression-ecrite': 'stylo', 'expression-orale': 'micro' };
 const NCLC_CIBLE = 7; // seuil du Programme des travailleurs qualifiés (fédéral) dans les 4 compétences
 
-const carte = { background: '#fff', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
-const boutonPrincipal = couleur => ({ padding: '12px 20px', background: couleur, color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700' });
 
 function Simulateur({ utilisateur, onRetour }) {
   const estPro = utilisateur?.abonnement === 'pro';
@@ -254,61 +255,51 @@ function Simulateur({ utilisateur, onRetour }) {
     const dureeTotale = EPREUVES.filter(e => choix.includes(e.key)).reduce((acc, e) => acc + e.dureeMinutes, 0);
     const basculer = key => setChoix(c => (c.includes(key) ? c.filter(k => k !== key) : [...c, key]));
     return (
-      <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-        <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '40px 20px 80px', color: '#fff', textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🍁</div>
-          <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Simulateur TCF Canada</h2>
-          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '15px' }}>Format officiel · Résultat converti en NCLC</p>
-        </div>
-        <div style={{ maxWidth: '620px', margin: '-40px auto 0', padding: '0 16px 40px' }}>
-          <div style={{ ...carte, padding: '24px', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px' }}>Choisissez vos épreuves</h3>
-            <p style={{ fontSize: '13px', color: '#888', marginBottom: '12px' }}>Comme à l'examen officiel, vous pouvez passer les 4 épreuves ou seulement certaines.</p>
+      <div>
+        <EntetePage titre="Examen blanc TCF Canada" sousTitre="Format officiel, chronométré, avec un résultat converti en NCLC pour chaque compétence." onRetour={onRetour} />
+        <main className="conteneur chevauche" style={{ maxWidth: 720, paddingBottom: 56 }}>
+          <div className="carte" style={{ marginBottom: 16 }}>
+            <h2 className="titre-3" style={{ marginBottom: 4 }}>Choisissez vos épreuves</h2>
+            <p className="petit texte-3" style={{ marginBottom: 12 }}>Comme à l'examen officiel, vous pouvez passer les 4 épreuves ou seulement certaines.</p>
             {EPREUVES.map((ep, i) => {
               const actif = choix.includes(ep.key);
               return (
-                <label key={ep.key} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', borderBottom: i < EPREUVES.length - 1 ? '1px solid #f0f0f0' : 'none', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={actif} onChange={() => basculer(ep.key)} style={{ width: '18px', height: '18px', accentColor: ep.couleur }} />
-                  <div style={{ fontSize: '22px' }}>{ep.emoji}</div>
+                <label key={ep.key} className="ligne gap-3" style={{ padding: '14px 0', borderTop: i ? '1px solid var(--bordure)' : 'none', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={actif} onChange={() => basculer(ep.key)} style={{ width: 18, height: 18, accentColor: 'var(--action)' }} />
+                  <span className="pastille-icone" style={{ width: 38, height: 38, background: 'var(--surface-2)', color: ep.couleur }}><Icone nom={ICONE[ep.key]} taille={18} /></span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: actif ? '#1a1a2e' : '#aaa' }}>{ep.label}</div>
-                    <div style={{ fontSize: '12px', color: '#999' }}>
-                      {ep.type === 'qcm' ? `${ep.nbQuestions} questions, de A1 à C2` : `${ep.nbTaches} tâches`} · noté {ep.bareme}
-                    </div>
+                    <div className="gras" style={{ color: actif ? 'var(--texte)' : 'var(--texte-3)' }}>{ep.label}</div>
+                    <div className="petit texte-3">{ep.type === 'qcm' ? `${ep.nbQuestions} questions, de A1 à C2` : `${ep.nbTaches} tâches`} · noté {ep.bareme}</div>
                   </div>
-                  <div style={{ fontSize: '13px', fontWeight: '700', color: ep.couleur }}>{ep.dureeMinutes} min</div>
+                  <span className="badge chiffres"><Icone nom="chrono" taille={12} /> {ep.dureeMinutes} min</span>
                 </label>
               );
             })}
-            <div style={{ marginTop: '14px', background: '#f9fafb', borderRadius: '10px', padding: '12px 14px', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '14px', fontWeight: '600' }}>Durée totale</span>
-              <span style={{ fontSize: '14px', fontWeight: '700', color: '#1D9E75' }}>{Math.floor(dureeTotale / 60) ? `${Math.floor(dureeTotale / 60)} h ` : ''}{dureeTotale % 60} min</span>
+            <div className="ligne entre" style={{ marginTop: 8, padding: '12px 14px', background: 'var(--surface-2)', borderRadius: 'var(--rayon-sm)' }}>
+              <span className="gras">Durée totale</span>
+              <span className="gras chiffres">{Math.floor(dureeTotale / 60) ? `${Math.floor(dureeTotale / 60)} h ` : ''}{dureeTotale % 60} min</span>
             </div>
             {!estPro && (choix.includes('expression-ecrite') || choix.includes('expression-orale')) && (
-              <p style={{ fontSize: '12px', color: '#B7791F', background: '#FFF8E6', borderRadius: '8px', padding: '10px 12px', marginTop: '12px' }}>
-                ⭐ La note /20 et le NCLC des épreuves d'expression sont calculés par l'IA, réservée aux membres Pro. Vous pourrez quand même vous entraîner.
-              </p>
+              <div className="encadre encadre-alerte" style={{ marginTop: 12 }}>
+                <Icone nom="etoile" taille={16} style={{ flexShrink: 0, marginTop: 3 }} />
+                La note /20 et le NCLC des épreuves d'expression sont calculés par l'IA, réservée aux membres Pro.
+              </div>
             )}
           </div>
-          {erreur && <p style={{ color: '#E24B4A', fontSize: '13px', marginBottom: '12px' }}>⚠️ {erreur}</p>}
-          <button onClick={commencerExamen} disabled={!choix.length}
-            style={{ ...boutonPrincipal(choix.length ? 'linear-gradient(135deg, #1D9E75, #0F6E56)' : '#ccc'), width: '100%', padding: '16px', fontSize: '16px' }}>
-            Commencer l'examen →
+          {erreur && <div className="message-erreur" role="alert" style={{ marginBottom: 12 }}>{erreur}</div>}
+          <button className="btn btn-primaire btn-grand btn-plein" onClick={commencerExamen} disabled={!choix.length}>
+            Commencer l'examen <Icone nom="fleche" taille={18} />
           </button>
-          <button onClick={onRetour} style={{ width: '100%', marginTop: '10px', padding: '12px', background: 'transparent', border: '1px solid #ddd', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', color: '#666' }}>
-            ← Retour
-          </button>
-        </div>
+        </main>
       </div>
     );
   }
 
   if (phase === 'chargement' || phase === 'correction') return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '40px', marginBottom: '16px' }}>{phase === 'chargement' ? '⏳' : '🧮'}</div>
-        <p style={{ fontSize: '16px', color: '#666' }}>{phase === 'chargement' ? 'Préparation de votre examen…' : 'Calcul de vos résultats…'}</p>
-      </div>
+    <div className="conteneur-etroit section centre">
+      <div className="chargeur" style={{ margin: '0 auto 16px' }} />
+      <p className="titre-3" style={{ marginBottom: 4 }}>{phase === 'chargement' ? 'Préparation de votre examen…' : 'Calcul de vos résultats…'}</p>
+      {phase === 'correction' && <p className="petit texte-3">L'IA corrige vos productions, cela peut prendre une minute.</p>}
     </div>
   );
 
@@ -316,27 +307,30 @@ function Simulateur({ utilisateur, onRetour }) {
   if (phase === 'epreuve' && epActuelle) {
     const estOral = epActuelle.type === 'oral';
     const tempsAffiche = estOral ? tempsOral : tempsRestant;
-    const couleurTemps = !estOral && tempsRestant < 120 ? '#E24B4A' : !estOral && tempsRestant < 300 ? '#EF9F27' : '#1D9E75';
+    const urgent = !estOral && tempsRestant < 120;
     const dernier = indexEpreuve + 1 >= epreuves.length;
 
     const barre = (
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff', borderBottom: '1px solid #eee', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: '11px', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            Épreuve {indexEpreuve + 1}/{epreuves.length} — {epActuelle.emoji} {epActuelle.label}
+      <div className="nav" style={{ top: 64, zIndex: 90 }}>
+        <div className="conteneur ligne entre gap-2" style={{ minHeight: 56, maxWidth: 900 }}>
+          <div style={{ minWidth: 0 }}>
+            <div className="ligne gap-1 petit gras" style={{ color: epActuelle.couleur, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <Icone nom={ICONE[epActuelle.key]} taille={16} /> {epActuelle.label}
+            </div>
+            <div className="ligne gap-1" style={{ marginTop: 5 }}>
+              {epreuves.map((ep, i) => (
+                <span key={ep.key} style={{ width: 22, height: 4, borderRadius: 2, background: i < indexEpreuve ? 'var(--succes)' : i === indexEpreuve ? ep.couleur : 'var(--bordure)' }} />
+              ))}
+              <span className="tres-petit texte-3" style={{ marginLeft: 6 }}>Épreuve {indexEpreuve + 1}/{epreuves.length}</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-            {epreuves.map((ep, i) => (
-              <div key={ep.key} style={{ width: '20px', height: '4px', borderRadius: '2px', background: i < indexEpreuve ? '#1D9E75' : i === indexEpreuve ? ep.couleur : '#eee' }} />
-            ))}
-          </div>
+          <span className="badge chiffres" role="timer" style={{ fontSize: '1rem', padding: '7px 12px', background: urgent ? 'var(--erable-pale)' : 'var(--surface)', color: urgent ? 'var(--erreur)' : 'var(--texte)', border: '1px solid var(--bordure)' }}>
+            <Icone nom="chrono" taille={16} /> {formatTemps(tempsAffiche)}
+          </span>
+          {!estOral && (
+            <button className="btn btn-nuit btn-petit" onClick={terminerEpreuve}>{dernier ? 'Terminer' : 'Épreuve suivante'}</button>
+          )}
         </div>
-        <div style={{ fontSize: '22px', fontWeight: '800', color: couleurTemps, fontVariantNumeric: 'tabular-nums' }}>⏱ {formatTemps(tempsAffiche)}</div>
-        {!estOral && (
-          <button onClick={terminerEpreuve} style={{ ...boutonPrincipal('#1D9E75'), padding: '8px 12px', fontSize: '12px', whiteSpace: 'nowrap' }}>
-            {dernier ? 'Terminer ✓' : 'Épreuve suivante →'}
-          </button>
-        )}
       </div>
     );
 
@@ -344,11 +338,11 @@ function Simulateur({ utilisateur, onRetour }) {
     if (epActuelle.type === 'qcm') {
       const qs = questions[epActuelle.key] || [];
       if (!qs.length) return (
-        <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>{barre}
-          <div style={{ ...carte, maxWidth: '520px', margin: '40px auto', textAlign: 'center' }}>
-            <p style={{ marginBottom: '16px' }}>Aucune question disponible pour cette épreuve pour le moment.</p>
-            <button onClick={terminerEpreuve} style={boutonPrincipal(epActuelle.couleur)}>Continuer →</button>
-          </div>
+        <div>{barre}
+          <div className="conteneur-etroit section"><div className="carte centre">
+            <p style={{ marginBottom: 16 }}>Aucune question disponible pour cette épreuve pour le moment.</p>
+            <button className="btn btn-nuit" onClick={terminerEpreuve}>Continuer</button>
+          </div></div>
         </div>
       );
       const q = qs[indexQuestion];
@@ -357,67 +351,57 @@ function Simulateur({ utilisateur, onRetour }) {
       const estOrale = epActuelle.key === 'comprehension-orale';
 
       return (
-        <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
+        <div>
           {barre}
-          <div style={{ height: '3px', background: '#eee' }}>
-            <div style={{ height: '100%', width: `${((indexQuestion + 1) / qs.length) * 100}%`, background: epActuelle.couleur, transition: 'width 0.4s' }} />
-          </div>
-          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px 16px' }}>
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <main className="conteneur" style={{ maxWidth: 900, padding: '20px 20px 48px' }}>
+            <div className="ligne envelopper" style={{ gap: 5, marginBottom: 16 }}>
               {qs.map((qq, i) => {
                 const repondu = repEpreuve[i] !== undefined;
                 return (
-                  <button key={i} onClick={() => setIndexQuestion(i)} title={qq.niveau}
-                    style={{ width: '30px', height: '30px', borderRadius: '7px', border: i === indexQuestion ? `2px solid ${epActuelle.couleur}` : '1px solid #ddd', background: repondu ? '#E1F5EE' : '#fff', color: repondu ? '#0F6E56' : '#666', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>
+                  <button key={i} onClick={() => setIndexQuestion(i)} title={`Question ${i + 1} · ${qq.niveau}`} aria-label={`Question ${i + 1}`}
+                    style={{ width: 32, height: 32, borderRadius: 7, fontSize: '0.78rem', fontWeight: 700,
+                      border: i === indexQuestion ? '2px solid var(--action)' : '1px solid var(--bordure)',
+                      background: repondu ? 'var(--action-pale)' : 'var(--surface)', color: repondu ? 'var(--action)' : 'var(--texte-3)' }}>
                     {i + 1}
                   </button>
                 );
               })}
             </div>
 
-            <div style={{ ...carte, padding: '22px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <span style={{ fontSize: '12px', color: '#999' }}>Question {indexQuestion + 1} / {qs.length}</span>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: NIVEAU_COULEUR[q.niveau], background: NIVEAU_COULEUR[q.niveau] + '20', padding: '3px 10px', borderRadius: '20px' }}>{q.niveau}</span>
+            <div className="carte" style={{ marginBottom: 16 }}>
+              <div className="ligne entre" style={{ marginBottom: 14 }}>
+                <span className="petit texte-3 chiffres">Question {indexQuestion + 1} / {qs.length}</span>
+                <span className="badge" style={{ color: NIVEAU_COULEUR[q.niveau] }}>Niveau {q.niveau}</span>
               </div>
               {estOrale ? (
-                <>
-                  {q.texte && <p style={{ fontSize: '12px', color: '#999', marginBottom: '8px' }}>🎧 {q.texte}</p>}
+                <div style={{ marginBottom: 16 }}>
+                  {q.texte && <p className="etiquette" style={{ marginBottom: 8 }}>{q.texte}</p>}
                   <AudioPlayer key={q.id || indexQuestion} texte={q.audio_texte || q.texte} />
-                </>
-              ) : (
-                <div style={{ background: '#f9fafb', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
-                  <p style={{ fontSize: '14px', lineHeight: '1.7', color: '#333' }}>{q.texte}</p>
                 </div>
+              ) : (
+                <div className="document" style={{ marginBottom: 16 }}>{q.texte}</div>
               )}
-              <p style={{ fontWeight: '700', fontSize: '15px', marginBottom: '14px' }}>{q.question}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {q.options.map((opt, i) => {
-                  const sel = repEpreuve[indexQuestion] === i;
-                  return (
-                    <button key={i} onClick={() => choisir(i)}
-                      style={{ padding: '12px 14px', borderRadius: '10px', textAlign: 'left', border: sel ? `2px solid ${epActuelle.couleur}` : '1.5px solid #e8e8e8', background: sel ? epActuelle.couleur + '15' : '#fff', color: '#333', cursor: 'pointer', fontSize: '14px', fontWeight: sel ? '600' : '400' }}>
-                      <span style={{ display: 'inline-block', width: '22px', height: '22px', borderRadius: '50%', background: sel ? epActuelle.couleur : '#eee', color: '#fff', textAlign: 'center', lineHeight: '22px', fontSize: '11px', fontWeight: '700', marginRight: '10px' }}>
-                        {String.fromCharCode(65 + i)}
-                      </span>
-                      {opt}
-                    </button>
-                  );
-                })}
+              <p className="gras" style={{ fontSize: '1.05rem', marginBottom: 14 }}>{q.question}</p>
+              <div className="pile" style={{ gap: 10 }} role="radiogroup">
+                {q.options.map((opt, i) => (
+                  <button key={i} role="radio" aria-checked={repEpreuve[indexQuestion] === i} onClick={() => choisir(i)}
+                    className={`choix${repEpreuve[indexQuestion] === i ? ' selectionne' : ''}`}>
+                    <span className="choix-lettre">{String.fromCharCode(65 + i)}</span>{opt}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setIndexQuestion(i => Math.max(0, i - 1))} disabled={indexQuestion === 0}
-                style={{ flex: 1, padding: '12px', background: indexQuestion === 0 ? '#f0f0f0' : '#fff', border: '1px solid #ddd', borderRadius: '10px', cursor: indexQuestion === 0 ? 'default' : 'pointer', fontSize: '14px', color: indexQuestion === 0 ? '#ccc' : '#444' }}>
-                ← Précédente
+            <div className="ligne gap-2">
+              <button className="btn btn-contour" style={{ flex: 1 }} disabled={indexQuestion === 0} onClick={() => setIndexQuestion(i => Math.max(0, i - 1))}>
+                <Icone nom="retour" taille={16} /> Précédente
               </button>
-              <button onClick={() => (indexQuestion + 1 < qs.length ? setIndexQuestion(i => i + 1) : terminerEpreuve())}
-                style={{ ...boutonPrincipal(epActuelle.couleur), flex: 1 }}>
-                {indexQuestion + 1 === qs.length ? (dernier ? 'Terminer ✓' : 'Épreuve suivante →') : 'Suivante →'}
+              <button className={`btn ${indexQuestion + 1 === qs.length ? 'btn-primaire' : 'btn-nuit'}`} style={{ flex: 1 }}
+                onClick={() => (indexQuestion + 1 < qs.length ? setIndexQuestion(i => i + 1) : terminerEpreuve())}>
+                {indexQuestion + 1 === qs.length ? (dernier ? 'Terminer l\'examen' : 'Épreuve suivante') : 'Suivante'} <Icone nom="fleche" taille={16} />
               </button>
             </div>
-          </div>
+          </main>
         </div>
       );
     }
@@ -428,47 +412,43 @@ function Simulateur({ utilisateur, onRetour }) {
       const nbMots = compterMots(redactions[tacheEE]);
       const okMots = nbMots >= sujet.minMots && nbMots <= sujet.maxMots;
       return (
-        <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
+        <div>
           {barre}
-          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '20px 16px' }}>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+          <main className="conteneur" style={{ maxWidth: 900, padding: '20px 20px 48px' }}>
+            <div className="segments" role="tablist" style={{ marginBottom: 16 }}>
               {TACHES_EE.map((t, i) => {
                 const n = compterMots(redactions[i]);
                 return (
-                  <button key={t.numero} onClick={() => setTacheEE(i)}
-                    style={{ flex: 1, padding: '10px 6px', borderRadius: '10px', border: i === tacheEE ? '2px solid #EF9F27' : '1px solid #ddd', background: i === tacheEE ? '#FFF6E8' : '#fff', cursor: 'pointer', fontSize: '12px', fontWeight: '700', color: '#7A4B00' }}>
+                  <button key={t.numero} role="tab" aria-selected={i === tacheEE} className={`segment${i === tacheEE ? ' actif' : ''}`} onClick={() => setTacheEE(i)}>
                     Tâche {t.numero}
-                    <div style={{ fontSize: '11px', fontWeight: '500', color: n ? '#1D9E75' : '#aaa', marginTop: '2px' }}>{n ? `${n} mots` : t.nom}</div>
+                    <span className="tres-petit" style={{ display: 'block', fontWeight: 500, color: n ? 'var(--succes)' : 'var(--texte-3)' }}>{n ? `${n} mots` : t.nom}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div style={{ background: '#FFF6E8', border: '1px solid #F5D49A', borderRadius: '12px', padding: '16px', marginBottom: '14px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#7A4B00', marginBottom: '6px' }}>{sujet.tache}</p>
-              <p style={{ fontSize: '14px', color: '#4A2E00', lineHeight: '1.7' }}>{sujet.sujet}</p>
+            <div className="carte" style={{ marginBottom: 16 }}>
+              <p className="etiquette" style={{ marginBottom: 6 }}>{sujet.tache} · {sujet.minMots} à {sujet.maxMots} mots</p>
+              <p style={{ lineHeight: 1.7 }}>{sujet.sujet}</p>
               {sujet.documents && sujet.documents.map((d, i) => (
-                <p key={i} style={{ fontSize: '13px', color: '#4A2E00', lineHeight: '1.6', background: '#fff', borderLeft: '3px solid #EF9F27', borderRadius: '6px', padding: '10px 12px', marginTop: '10px' }}>{d}</p>
+                <p key={i} className="document" style={{ marginTop: 10, borderLeft: '3px solid var(--ee)' }}>{d}</p>
               ))}
-              <p style={{ fontSize: '12px', color: '#B7791F', marginTop: '10px' }}>📝 {sujet.minMots} à {sujet.maxMots} mots</p>
             </div>
 
-            <div style={carte}>
-              <textarea value={redactions[tacheEE]} onChange={e => { const v = e.target.value; setRedactions(prev => prev.map((r, i) => (i === tacheEE ? v : r))); }}
-                placeholder="Rédigez votre texte ici…"
-                style={{ width: '100%', minHeight: '280px', border: 'none', outline: 'none', fontSize: '15px', lineHeight: '1.8', color: '#333', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f0f0f0' }}>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: okMots ? '#1D9E75' : nbMots > sujet.maxMots ? '#E24B4A' : '#aaa' }}>
+            <div className="carte">
+              <label htmlFor="redaction-examen" className="sr-only">Votre texte</label>
+              <textarea id="redaction-examen" className="zone-texte" value={redactions[tacheEE]} placeholder="Rédigez votre texte ici…"
+                onChange={e => { const v = e.target.value; setRedactions(prev => prev.map((r, i) => (i === tacheEE ? v : r))); }} />
+              <div className="ligne entre envelopper gap-2" style={{ marginTop: 12 }}>
+                <span className="petit gras chiffres" style={{ color: okMots ? 'var(--succes)' : nbMots > sujet.maxMots ? 'var(--erreur)' : 'var(--texte-3)' }}>
                   {nbMots} mot{nbMots > 1 ? 's' : ''} / {sujet.minMots}–{sujet.maxMots} {okMots ? '✓' : ''}
                 </span>
-                {tacheEE < 2 ? (
-                  <button onClick={() => setTacheEE(t => t + 1)} style={boutonPrincipal('#EF9F27')}>Tâche suivante →</button>
-                ) : (
-                  <button onClick={terminerEpreuve} style={boutonPrincipal('#EF9F27')}>{dernier ? 'Terminer ✓' : 'Épreuve suivante →'}</button>
-                )}
+                {tacheEE < 2
+                  ? <button className="btn btn-nuit" onClick={() => setTacheEE(t => t + 1)}>Tâche suivante <Icone nom="fleche" taille={16} /></button>
+                  : <button className="btn btn-primaire" onClick={terminerEpreuve}>{dernier ? 'Terminer l\'examen' : 'Épreuve suivante'} <Icone nom="fleche" taille={16} /></button>}
               </div>
             </div>
-          </div>
+          </main>
         </div>
       );
     }
@@ -478,68 +458,72 @@ function Simulateur({ utilisateur, onRetour }) {
       const sujet = sujetsOraux[tacheEO];
       const tache = TACHES_EO[tacheEO];
       return (
-        <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
+        <div>
           {barre}
-          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px 16px' }}>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+          <main className="conteneur" style={{ maxWidth: 900, padding: '20px 20px 48px' }}>
+            <div className="ligne gap-2" style={{ marginBottom: 16 }}>
               {TACHES_EO.map((t, i) => (
-                <div key={t.numero} style={{ flex: 1, padding: '8px 6px', borderRadius: '10px', textAlign: 'center', fontSize: '12px', fontWeight: '700', border: i === tacheEO ? '2px solid #D4537E' : '1px solid #e5e5e5', background: i < tacheEO ? '#E1F5EE' : i === tacheEO ? '#FBEAF0' : '#fff', color: i < tacheEO ? '#0F6E56' : '#993556' }}>
+                <div key={t.numero} className="petit gras centre" style={{ flex: 1, padding: '9px 6px', borderRadius: 'var(--rayon-sm)',
+                  border: i === tacheEO ? '2px solid var(--action)' : '1px solid var(--bordure)',
+                  background: i < tacheEO ? 'var(--succes-pale)' : 'var(--surface)', color: i < tacheEO ? 'var(--succes)' : i === tacheEO ? 'var(--texte)' : 'var(--texte-3)' }}>
                   {i < tacheEO ? '✓ ' : ''}Tâche {t.numero}
                 </div>
               ))}
             </div>
 
-            <div style={{ background: '#FBEAF0', border: '1px solid #F0A8C0', borderRadius: '12px', padding: '16px', marginBottom: '14px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#993556', marginBottom: '4px' }}>🎤 {sujet.tache}</p>
-              <p style={{ fontSize: '12px', color: '#B5577A', marginBottom: '8px' }}>{tache.description}</p>
-              <p style={{ fontSize: '14px', color: '#7A1A3A', lineHeight: '1.7' }}>{sujet.sujet}</p>
+            <div className="carte" style={{ marginBottom: 16 }}>
+              <p className="etiquette" style={{ marginBottom: 4 }}>{sujet.tache}</p>
+              <p className="petit texte-3" style={{ marginBottom: 10 }}>{tache.description}</p>
+              <p style={{ lineHeight: 1.7 }}>{sujet.sujet}</p>
             </div>
 
-            {erreur && <p style={{ color: '#E24B4A', fontSize: '13px', marginBottom: '12px' }}>⚠️ {erreur}</p>}
+            {erreur && <div className="message-erreur" role="alert" style={{ marginBottom: 12 }}>{erreur}</div>}
 
             {phaseOrale === 'prep' && (
-              <div style={{ ...carte, padding: '26px', textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', marginBottom: '10px' }}>🧠</div>
+              <div className="carte centre" style={{ padding: 28 }}>
                 {tache.preparationSecondes > 0 ? (
                   <>
-                    <h3 style={{ fontSize: '17px', fontWeight: '700', marginBottom: '6px' }}>Préparation : {formatTemps(tempsOral)}</h3>
-                    <p style={{ fontSize: '13px', color: '#888', marginBottom: '18px' }}>Notez vos questions. L'enregistrement démarrera automatiquement.</p>
+                    <p className="etiquette" style={{ marginBottom: 6 }}>Préparation</p>
+                    <div className="chiffres" style={{ fontFamily: 'var(--police-titre)', fontSize: '3rem', fontWeight: 700, lineHeight: 1, marginBottom: 6 }}>{formatTemps(tempsOral)}</div>
+                    <p className="petit texte-3" style={{ marginBottom: 18 }}>Notez vos questions. L'enregistrement démarrera automatiquement.</p>
                   </>
                 ) : (
                   <>
-                    <h3 style={{ fontSize: '17px', fontWeight: '700', marginBottom: '6px' }}>Pas de préparation pour cette tâche</h3>
-                    <p style={{ fontSize: '13px', color: '#888', marginBottom: '18px' }}>Vous aurez {formatTemps(tache.dureeSecondes)} pour parler. Commencez quand vous êtes prêt(e).</p>
+                    <p className="titre-3" style={{ marginBottom: 6 }}>Pas de préparation pour cette tâche</p>
+                    <p className="petit texte-3" style={{ marginBottom: 18 }}>Vous aurez {formatTemps(tache.dureeSecondes)} pour parler. Commencez quand vous êtes prêt(e).</p>
                   </>
                 )}
-                <button onClick={demarrerEnregistrement} style={{ ...boutonPrincipal('linear-gradient(135deg, #D4537E, #993556)'), width: '100%', padding: '14px' }}>
-                  🎙️ {tache.preparationSecondes > 0 ? 'Je suis prêt(e), commencer' : 'Commencer l\'enregistrement'}
+                <button className="btn btn-primaire btn-grand btn-plein" onClick={demarrerEnregistrement}>
+                  <Icone nom="micro" taille={18} /> {tache.preparationSecondes > 0 ? 'Je suis prêt(e), commencer' : 'Commencer l\'enregistrement'}
                 </button>
               </div>
             )}
 
             {phaseOrale === 'enregistrement' && (
-              <div style={{ ...carte, padding: '26px', textAlign: 'center' }}>
-                <p style={{ fontSize: '15px', fontWeight: '700', color: '#D4537E', marginBottom: '8px' }}>🔴 Enregistrement en cours</p>
-                <p style={{ fontSize: '13px', color: '#888', marginBottom: '14px' }}>Temps restant : {formatTemps(tempsOral)}</p>
-                {transcriptions[tacheEO] && <p style={{ fontSize: '13px', color: '#777', marginBottom: '16px', fontStyle: 'italic' }}>« …{transcriptions[tacheEO].slice(-120)} »</p>}
-                <button onClick={arreterEnregistrement} style={boutonPrincipal('#E24B4A')}>⏹ J'ai terminé</button>
+              <div className="carte centre" style={{ padding: 28 }}>
+                <span className="badge" style={{ background: 'var(--erable-pale)', color: 'var(--erreur)', marginBottom: 10 }}>● Enregistrement</span>
+                <div className="chiffres" style={{ fontFamily: 'var(--police-titre)', fontSize: '3rem', fontWeight: 700, lineHeight: 1, marginBottom: 14 }}>{formatTemps(tempsOral)}</div>
+                <div className="document" style={{ textAlign: 'left', marginBottom: 18, minHeight: 64 }}>
+                  <p className="texte-2">{transcriptions[tacheEO] || 'Parlez, votre texte apparaîtra ici…'}</p>
+                </div>
+                <button className="btn btn-nuit btn-grand btn-plein" onClick={arreterEnregistrement}><Icone nom="coche" taille={18} /> J'ai terminé</button>
               </div>
             )}
 
             {phaseOrale === 'termine' && (
-              <div style={carte}>
-                <p style={{ fontSize: '13px', fontWeight: '700', marginBottom: '10px' }}>✅ Tâche {tache.numero} terminée</p>
-                {audios[tacheEO] && <audio controls src={audios[tacheEO]} style={{ width: '100%', marginBottom: '12px' }} />}
-                <div style={{ background: '#f9fafb', borderRadius: '8px', padding: '12px', marginBottom: '14px' }}>
-                  <p style={{ fontSize: '12px', color: '#888', marginBottom: '6px' }}>Transcription</p>
-                  <p style={{ fontSize: '13px', color: '#444', lineHeight: '1.6' }}>{transcriptions[tacheEO] || 'Aucune transcription détectée (la reconnaissance vocale fonctionne mieux dans Chrome).'}</p>
+              <div className="carte">
+                <p className="titre-3 ligne gap-1" style={{ marginBottom: 12, color: 'var(--succes)' }}><Icone nom="coche" taille={18} /> Tâche {tache.numero} terminée</p>
+                {audios[tacheEO] && <audio controls src={audios[tacheEO]} style={{ width: '100%', marginBottom: 12 }} />}
+                <div className="document" style={{ marginBottom: 16 }}>
+                  <p className="etiquette" style={{ marginBottom: 6 }}>Transcription</p>
+                  <p className="texte-2">{transcriptions[tacheEO] || 'Aucune transcription détectée (la reconnaissance vocale fonctionne dans Chrome et Edge).'}</p>
                 </div>
-                <button onClick={tacheOraleSuivante} style={{ ...boutonPrincipal('#D4537E'), width: '100%', padding: '14px' }}>
-                  {tacheEO < 2 ? 'Tâche suivante →' : dernier ? 'Terminer l\'examen ✓' : 'Épreuve suivante →'}
+                <button className="btn btn-primaire btn-grand btn-plein" onClick={tacheOraleSuivante}>
+                  {tacheEO < 2 ? 'Tâche suivante' : dernier ? 'Terminer l\'examen' : 'Épreuve suivante'} <Icone nom="fleche" taille={18} />
                 </button>
               </div>
             )}
-          </div>
+          </main>
         </div>
       );
     }
@@ -557,19 +541,14 @@ function Simulateur({ utilisateur, onRetour }) {
     const objectifAtteint = notees.length === 4 && nclcMin >= NCLC_CIBLE;
 
     return (
-      <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-        <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '40px 20px 80px', color: '#fff', textAlign: 'center' }}>
-          <div style={{ fontSize: '46px', marginBottom: '10px' }}>{objectifAtteint ? '🎉' : '📊'}</div>
-          <h2 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '6px' }}>Vos résultats estimés</h2>
-          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '14px' }}>Équivalences NCLC utilisées par IRCC</p>
-        </div>
-
-        <div style={{ maxWidth: '660px', margin: '-40px auto 0', padding: '0 16px 40px' }}>
+      <div>
+        <EntetePage titre="Vos résultats estimés" sousTitre="Équivalences NCLC utilisées par IRCC, épreuve par épreuve." />
+        <main className="conteneur chevauche" style={{ maxWidth: 820, paddingBottom: 56 }}>
           {nclcMin !== null && (
-            <div style={{ ...carte, padding: '24px', marginBottom: '16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '13px', color: '#888', marginBottom: '6px' }}>Votre niveau le plus faible</div>
-              <div style={{ fontSize: '44px', fontWeight: '800', color: nclcMin >= NCLC_CIBLE ? '#1D9E75' : '#EF9F27' }}>{libelleNCLC(nclcMin)}</div>
-              <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', lineHeight: '1.6' }}>
+            <div className="carte centre" style={{ marginBottom: 16, padding: 'clamp(24px, 4vw, 36px)' }}>
+              <p className="etiquette" style={{ marginBottom: 6 }}>Votre niveau le plus faible</p>
+              <div style={{ fontFamily: 'var(--police-titre)', fontSize: '3rem', fontWeight: 700, lineHeight: 1.1, color: nclcMin >= NCLC_CIBLE ? 'var(--succes)' : 'var(--alerte)' }}>{libelleNCLC(nclcMin)}</div>
+              <p className="texte-2" style={{ marginTop: 10, maxWidth: 520, marginInline: 'auto' }}>
                 {objectifAtteint
                   ? 'Vous atteignez NCLC 7 dans les 4 compétences, le minimum demandé par le Programme des travailleurs qualifiés (fédéral).'
                   : `Pour Entrée express, IRCC tient compte de chaque compétence séparément. Visez au moins NCLC ${NCLC_CIBLE} partout.`}
@@ -577,17 +556,17 @@ function Simulateur({ utilisateur, onRetour }) {
             </div>
           )}
 
-          <div style={{ ...carte, marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Détail par épreuve</h3>
+          <div className="carte" style={{ marginBottom: 16, padding: 0 }}>
+            <h2 className="titre-3" style={{ padding: '18px 22px', borderBottom: '1px solid var(--bordure)' }}>Détail par épreuve</h2>
             {lignes.map(({ ep, r, nclc }, i) => {
               const cible = scorePourNCLC(ep.key, NCLC_CIBLE);
               return (
-                <div key={ep.key} style={{ padding: '14px 0', borderBottom: i < lignes.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '22px' }}>{ep.emoji}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '14px', fontWeight: '600' }}>{ep.label}</div>
-                      <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
+                <div key={ep.key} style={{ padding: '16px 22px', borderTop: i ? '1px solid var(--bordure)' : 'none' }}>
+                  <div className="ligne gap-3">
+                    <span className="pastille-icone" style={{ width: 40, height: 40, background: 'var(--surface-2)', color: ep.couleur }}><Icone nom={ICONE[ep.key]} taille={18} /></span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="gras">{ep.label}</div>
+                      <div className="petit texte-3">
                         {ep.type === 'qcm' && `${r.justes}/${r.total} bonnes réponses · niveau ${scoreVersCECR(r.score)}`}
                         {ep.type !== 'qcm' && r.mots && `Mots par tâche : ${r.mots.join(' · ')}`}
                       </div>
@@ -595,25 +574,23 @@ function Simulateur({ utilisateur, onRetour }) {
                     <div style={{ textAlign: 'right' }}>
                       {r.score !== null && r.score !== undefined ? (
                         <>
-                          <div style={{ fontSize: '17px', fontWeight: '800', color: ep.couleur }}>{r.score}<span style={{ fontSize: '12px', color: '#aaa' }}>/{r.max}</span></div>
-                          <div style={{ fontSize: '12px', fontWeight: '700', color: nclc >= NCLC_CIBLE ? '#1D9E75' : '#EF9F27' }}>{libelleNCLC(nclc)}</div>
+                          <div className="chiffres gras" style={{ fontSize: '1.15rem' }}>{r.score}<span className="petit texte-3">/{r.max}</span></div>
+                          <span className={`badge ${nclc >= NCLC_CIBLE ? 'badge-succes' : 'badge-alerte'}`}>{libelleNCLC(nclc)}</span>
                         </>
                       ) : (
-                        <div style={{ fontSize: '12px', color: '#B7791F', fontWeight: '600', maxWidth: '130px' }}>{estPro ? 'Correction indisponible' : '⭐ Note avec Pro'}</div>
+                        <span className="badge badge-alerte">{estPro ? 'Correction indisponible' : 'Note avec Pro'}</span>
                       )}
                     </div>
                   </div>
                   {nclc !== null && nclc < NCLC_CIBLE && cible !== null && (
-                    <p style={{ fontSize: '12px', color: '#888', marginTop: '8px', marginLeft: '34px' }}>
-                      Il vous manque {cible - r.score} point{cible - r.score > 1 ? 's' : ''} pour atteindre NCLC {NCLC_CIBLE} ({cible}/{r.max}).
+                    <p className="petit texte-2" style={{ marginTop: 8, marginLeft: 52 }}>
+                      Il vous manque <strong>{cible - r.score} point{cible - r.score > 1 ? 's' : ''}</strong> pour atteindre NCLC {NCLC_CIBLE} ({cible}/{r.max}).
                     </p>
                   )}
                   {r.details && r.details.some(Boolean) && (
-                    <div style={{ marginTop: '8px', marginLeft: '34px' }}>
+                    <div className="pile gap-1" style={{ marginTop: 8, marginLeft: 52 }}>
                       {r.details.map((d, t) => d && (
-                        <p key={t} style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                          <strong>Tâche {t + 1}</strong> : {d.note}/{d.note_max || 20}{d.conseils ? ` — ${d.conseils}` : ''}
-                        </p>
+                        <p key={t} className="petit texte-2"><strong>Tâche {t + 1} : {d.note}/{d.note_max || 20}</strong>{d.conseils ? `. ${d.conseils}` : ''}</p>
                       ))}
                     </div>
                   )}
@@ -622,20 +599,17 @@ function Simulateur({ utilisateur, onRetour }) {
             })}
           </div>
 
-          <p style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: '16px', lineHeight: '1.5' }}>
-            Estimation pédagogique : seul le TCF Canada officiel donne un résultat reconnu par IRCC.
-          </p>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => setPhase('intro')} style={{ ...boutonPrincipal('#1D9E75'), flex: 1, padding: '14px' }}>Recommencer</button>
-            <button onClick={onRetour} style={{ flex: 1, padding: '14px', background: '#fff', border: '1px solid #ddd', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', color: '#444' }}>Tableau de bord</button>
+          <p className="tres-petit texte-3 centre" style={{ marginBottom: 16 }}>Estimation pédagogique : seul le TCF Canada officiel donne un résultat reconnu par IRCC.</p>
+          <div className="ligne envelopper gap-2">
+            <button className="btn btn-primaire btn-grand" style={{ flex: '1 1 200px' }} onClick={() => setPhase('intro')}>Repasser un examen</button>
+            <button className="btn btn-contour btn-grand" style={{ flex: '1 1 200px' }} onClick={onRetour}>Tableau de bord</button>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
-  return <div style={{ padding: '40px', textAlign: 'center' }}>Chargement…</div>;
+  return null;
 }
 
 export default Simulateur;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Icone from './Icone';
 
 function Timer({ duree, onExpire }) {
   const [temps, setTemps] = useState(duree);
@@ -12,14 +13,14 @@ function Timer({ duree, onExpire }) {
     return () => clearInterval(interval);
   }, [temps, onExpire]);
 
-  const minutes = Math.floor(temps / 60);
-  const secondes = temps % 60;
-  const affichage = `${String(minutes).padStart(2, '0')}:${String(secondes).padStart(2, '0')}`;
+  const affichage = `${String(Math.floor(temps / 60)).padStart(2, '0')}:${String(temps % 60).padStart(2, '0')}`;
+  const urgent = temps < 30;
 
   return (
-    <div style={{ fontSize: '22px', fontWeight: 'bold', color: temps < 30 ? 'red' : '#1D9E75' }}>
-      ⏱ {affichage}
-    </div>
+    <span className="badge chiffres" role="timer" aria-label={`Temps restant ${affichage}`}
+      style={{ fontSize: '0.95rem', padding: '7px 12px', background: urgent ? 'var(--erable-pale)' : 'var(--surface)', color: urgent ? 'var(--erreur)' : 'var(--texte)', border: '1px solid var(--bordure)' }}>
+      <Icone nom="chrono" taille={15} /> {affichage}
+    </span>
   );
 }
 

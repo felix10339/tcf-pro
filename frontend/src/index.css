@@ -242,6 +242,45 @@ input:focus, textarea:focus, select:focus {
 }
 .chevauche { margin-top: -48px; position: relative; z-index: 1; }
 
+/* ——— Choix de réponse (QCM) ——— */
+.choix {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 12px 14px; border-radius: var(--rayon-sm); text-align: left; font-size: 0.95rem; line-height: 1.45;
+  border: 1.5px solid var(--bordure); background: var(--surface); color: var(--texte);
+}
+.choix:hover:not(:disabled) { border-color: var(--bordure-forte); background: var(--fond); }
+.choix:disabled { cursor: default; }
+.choix-lettre {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; background: var(--surface-2); color: var(--texte-2);
+}
+.choix.selectionne { border-color: var(--action); background: var(--action-pale); }
+.choix.selectionne .choix-lettre { background: var(--action); color: #fff; }
+.choix.juste { border-color: var(--succes); background: var(--succes-pale); }
+.choix.juste .choix-lettre { background: var(--succes); color: #fff; }
+.choix.faux { border-color: var(--erreur); background: var(--erable-pale); }
+.choix.faux .choix-lettre { background: var(--erreur); color: #fff; }
+
+/* Document à lire / consigne */
+.document { background: var(--surface-2); border-radius: var(--rayon-sm); padding: 16px 18px; line-height: 1.75; }
+.etiquette { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-3); }
+
+/* Encadré d'information */
+.encadre { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: var(--rayon-sm); font-size: 0.9rem; line-height: 1.6; }
+.encadre-info { background: var(--action-pale); color: var(--nuit); }
+.encadre-succes { background: var(--succes-pale); color: #0B4D30; }
+.encadre-alerte { background: var(--alerte-pale); color: #6B4200; }
+
+/* Zone de texte longue */
+.zone-texte { width: 100%; min-height: 260px; padding: 16px; border: 1px solid var(--bordure-forte); border-radius: var(--rayon-sm); background: var(--surface); font-size: 1rem; line-height: 1.8; resize: vertical; }
+
+/* Onglets soulignés */
+.onglets { display: flex; gap: 4px; border-bottom: 1px solid var(--bordure); overflow-x: auto; }
+.onglet { background: none; border: none; padding: 12px 14px; font-weight: 600; font-size: 0.92rem; color: var(--texte-3); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.onglet:hover { color: var(--texte); }
+.onglet.actif { color: var(--texte); border-bottom-color: var(--action); }
+
 /* ——— Barre de progression ——— */
 .progression { height: 6px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
 .progression > div { height: 100%; border-radius: 6px; transition: width 0.6s ease; }

@@ -5,7 +5,7 @@
 export const NIVEAUX = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 export const NIVEAU_COULEUR = {
-  A1: '#9CA3AF', A2: '#EF9F27', B1: '#1D9E75', B2: '#378ADD', C1: '#7F77DD', C2: '#5A52B5'
+  A1: '#6B7280', A2: '#A86400', B1: '#12784A', B2: '#1F5FBF', C1: '#5B4FC4', C2: '#3D2F9E'
 };
 
 // Répartition des 39 questions d'une épreuve de compréhension, de la plus facile à la plus difficile.
@@ -13,19 +13,19 @@ export const REPARTITION_COMPREHENSION = { A1: 4, A2: 6, B1: 10, B2: 10, C1: 6, 
 
 export const EPREUVES = [
   {
-    key: 'comprehension-orale', label: 'Compréhension orale', emoji: '🎧', couleur: '#1D9E75',
+    key: 'comprehension-orale', label: 'Compréhension orale', emoji: '🎧', couleur: '#12784A',
     type: 'qcm', dureeMinutes: 35, nbQuestions: 39, bareme: '/699'
   },
   {
-    key: 'comprehension-ecrite', label: 'Compréhension écrite', emoji: '📖', couleur: '#378ADD',
+    key: 'comprehension-ecrite', label: 'Compréhension écrite', emoji: '📖', couleur: '#1F5FBF',
     type: 'qcm', dureeMinutes: 60, nbQuestions: 39, bareme: '/699'
   },
   {
-    key: 'expression-ecrite', label: 'Expression écrite', emoji: '✍️', couleur: '#EF9F27',
+    key: 'expression-ecrite', label: 'Expression écrite', emoji: '✍️', couleur: '#A86400',
     type: 'redaction', dureeMinutes: 60, nbTaches: 3, bareme: '/20'
   },
   {
-    key: 'expression-orale', label: 'Expression orale', emoji: '🎤', couleur: '#D4537E',
+    key: 'expression-orale', label: 'Expression orale', emoji: '🎤', couleur: '#A3275B',
     type: 'oral', dureeMinutes: 12, nbTaches: 3, bareme: '/20'
   }
 ];

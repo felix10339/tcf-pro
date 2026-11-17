@@ -3,6 +3,12 @@ import axios from 'axios';
 import sujets from '../data/sujets-expression-ecrite';
 import API_URL from '../config';
 import { NIVEAU_COULEUR } from '../data/tcfCanada';
+import EntetePage from '../components/EntetePage';
+import CarteCorrection from '../components/CarteCorrection';
+import Icone from '../components/Icone';
+
+const TACHES = [1, 2, 3];
+const NOM_TACHE = { 1: 'Message', 2: 'Article ou récit', 3: 'Argumentation' };
 
 function ExpressionEcrite({ onRetour }) {
   const [phase, setPhase] = useState('choix');
@@ -10,14 +16,14 @@ function ExpressionEcrite({ onRetour }) {
   const [redaction, setRedaction] = useState('');
   const [chargement, setChargement] = useState(false);
   const [correction, setCorrection] = useState(null);
-
-  const niveauCouleur = NIVEAU_COULEUR;
+  const [erreur, setErreur] = useState('');
 
   const compterMots = (texte) => texte.trim().split(/\s+/).filter(m => m.length > 0).length;
 
   const soumettre = async () => {
     if (!redaction.trim()) return;
     setChargement(true);
+    setErreur('');
     try {
       const token = localStorage.getItem('token');
       const sujetComplet = sujetChoisi.documents
@@ -33,181 +39,105 @@ function ExpressionEcrite({ onRetour }) {
       }, { headers: { Authorization: `Bearer ${token}` } });
       setCorrection(res.data);
       setPhase('correction');
+      window.scrollTo(0, 0);
     } catch (err) {
       console.error(err);
-      alert('Erreur lors de la correction. Vérifiez votre crédit Anthropic.');
+      setErreur(err.response?.data?.message || 'La correction n\'a pas pu être effectuée. Réessayez dans quelques instants.');
     } finally {
       setChargement(false);
     }
   };
 
   const nbMots = compterMots(redaction);
-  const motsSuffisants = nbMots >= sujetChoisi?.minMots;
+  const motsSuffisants = nbMots >= (sujetChoisi?.minMots || 0);
   const motsTropLongs = nbMots > (sujetChoisi?.maxMots || 999);
 
-  // CHOIX DU SUJET
+  // ——— Choix du sujet ———
   if (phase === 'choix') return (
-    <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-      <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '32px 32px 70px', color: '#fff' }}>
-        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-          <button onClick={onRetour} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '14px', marginBottom: '16px', padding: 0 }}>← Retour</button>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px' }}>✍️ Expression écrite</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>Choisissez un sujet et rédigez votre texte — l'IA corrige et note votre production</p>
+    <div>
+      <EntetePage titre="Expression écrite" sousTitre="Choisissez un sujet au format du TCF Canada. L'IA note votre texte sur 20 et vous donne votre équivalence NCLC." onRetour={onRetour} />
+      <main className="conteneur chevauche" style={{ maxWidth: 960, paddingBottom: 56 }}>
+        <div className="encadre encadre-info carte" style={{ marginBottom: 24, border: 'none' }}>
+          <Icone nom="stylo" taille={18} style={{ flexShrink: 0, marginTop: 2, color: 'var(--action)' }} />
+          <p><strong>Au TCF Canada :</strong> 3 tâches en 60 minutes. Tâche 1 : message (60 à 120 mots). Tâche 2 : article ou récit (120 à 150 mots). Tâche 3 : argumentation à partir de deux documents (120 à 180 mots).</p>
         </div>
-      </div>
-      <div style={{ maxWidth: '760px', margin: '-32px auto 0', padding: '0 20px 40px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {sujets.map(s => (
-            <div key={s.id} onClick={() => { setSujetChoisi(s); setPhase('redaction'); }}
-              style={{ background: '#fff', borderRadius: '14px', padding: '20px 24px', cursor: 'pointer', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '2px solid transparent', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = niveauCouleur[s.niveau]; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: niveauCouleur[s.niveau] }}>{s.tache}</div>
-                <span style={{ background: niveauCouleur[s.niveau] + '20', color: niveauCouleur[s.niveau], fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px' }}>{s.niveau}</span>
-              </div>
-              <p style={{ fontSize: '14px', color: '#333', lineHeight: '1.6', marginBottom: '10px' }}>{s.sujet}</p>
-              <div style={{ fontSize: '12px', color: '#aaa' }}>{s.minMots}–{s.maxMots} mots → Commencer →</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  // RÉDACTION
-  if (phase === 'redaction') return (
-    <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-      <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '28px 32px 60px', color: '#fff' }}>
-        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-          <button onClick={() => setPhase('choix')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '14px', marginBottom: '12px', padding: 0 }}>← Changer de sujet</button>
-          <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', padding: '3px 10px', fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>{sujetChoisi.tache} — Niveau {sujetChoisi.niveau}</div>
-          <p style={{ fontSize: '15px', lineHeight: '1.7', color: 'rgba(255,255,255,0.9)' }}>{sujetChoisi.sujet}</p>
-          {sujetChoisi.documents && sujetChoisi.documents.map((d, i) => (
-            <p key={i} style={{ fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.8)', background: 'rgba(255,255,255,0.08)', borderLeft: '3px solid #EF9F27', borderRadius: '6px', padding: '10px 12px', marginTop: '10px' }}>{d}</p>
-          ))}
-        </div>
-      </div>
-      <div style={{ maxWidth: '760px', margin: '-32px auto 0', padding: '0 20px 40px' }}>
-        {/* Consignes */}
-        <div style={{ background: '#E6F1FB', border: '1px solid #B5D4F4', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
-          <p style={{ fontSize: '12px', color: '#185FA5', fontWeight: '600', marginBottom: '6px' }}>📋 Consignes</p>
-          {sujetChoisi.consignes.map((c, i) => (
-            <p key={i} style={{ fontSize: '13px', color: '#0C447C', marginBottom: '2px' }}>• {c}</p>
-          ))}
-        </div>
-
-        {/* Zone de rédaction */}
-        <div style={{ background: '#fff', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '16px' }}>
-          <textarea
-            value={redaction}
-            onChange={e => setRedaction(e.target.value)}
-            placeholder="Rédigez votre texte ici..."
-            style={{
-              width: '100%', minHeight: '280px', border: 'none', outline: 'none',
-              fontSize: '15px', lineHeight: '1.8', color: '#333', resize: 'vertical',
-              fontFamily: 'inherit', boxSizing: 'border-box'
-            }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f0f0f0' }}>
-            <span style={{ fontSize: '13px', color: motsTropLongs ? '#E24B4A' : motsSuffisants ? '#1D9E75' : '#aaa', fontWeight: '500' }}>
-              {nbMots} mot{nbMots > 1 ? 's' : ''} / {sujetChoisi.minMots}–{sujetChoisi.maxMots} requis
-              {motsSuffisants && !motsTropLongs ? ' ✓' : ''}
-              {motsTropLongs ? ' (trop long)' : ''}
-            </span>
-            <div style={{ height: '6px', width: '120px', background: '#f0f0f0', borderRadius: '6px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.min((nbMots / sujetChoisi.maxMots) * 100, 100)}%`, background: motsTropLongs ? '#E24B4A' : motsSuffisants ? '#1D9E75' : '#EF9F27', borderRadius: '6px', transition: 'width 0.3s' }} />
-            </div>
-          </div>
-        </div>
-
-        <button onClick={soumettre} disabled={chargement || nbMots < 10}
-          style={{ width: '100%', padding: '14px', background: nbMots < 10 || chargement ? '#ccc' : 'linear-gradient(135deg, #1D9E75, #0F6E56)', color: '#fff', border: 'none', borderRadius: '12px', cursor: nbMots < 10 || chargement ? 'default' : 'pointer', fontSize: '15px', fontWeight: '700', boxShadow: nbMots < 10 ? 'none' : '0 4px 15px rgba(29,158,117,0.35)' }}>
-          {chargement ? '⏳ Correction en cours...' : '🤖 Soumettre pour correction IA'}
-        </button>
-      </div>
-    </div>
-  );
-
-  // CORRECTION
-  if (phase === 'correction' && correction) {
-    const couleurNote = correction.note / correction.note_max >= 0.75 ? '#1D9E75' : correction.note / correction.note_max >= 0.5 ? '#EF9F27' : '#E24B4A';
-    return (
-      <div style={{ minHeight: '100vh', background: '#f4f6f8' }}>
-        <div style={{ background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', padding: '32px 32px 70px', color: '#fff', textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>📝</div>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px' }}>Correction IA</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>{sujetChoisi.tache}</p>
-        </div>
-        <div style={{ maxWidth: '760px', margin: '-32px auto 0', padding: '0 20px 40px' }}>
-
-          {/* Note */}
-          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '56px', fontWeight: '800', color: couleurNote }}>{correction.note}<span style={{ fontSize: '24px', color: '#aaa' }}>/{correction.note_max}</span></div>
-            <div style={{ display: 'inline-block', marginTop: '8px', background: couleurNote + '20', color: couleurNote, padding: '5px 16px', borderRadius: '20px', fontSize: '15px', fontWeight: '700' }}>
-              Niveau estimé : {correction.niveau_estime}
-            </div>
-          </div>
-
-          {/* Points forts */}
-          <div style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: '14px', padding: '18px 20px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#0F6E56', marginBottom: '10px' }}>✅ Points forts</p>
-            {correction.points_forts?.map((p, i) => <p key={i} style={{ fontSize: '14px', color: '#085041', marginBottom: '4px' }}>• {p}</p>)}
-          </div>
-
-          {/* Points à améliorer */}
-          <div style={{ background: '#FAEEDA', border: '1px solid #FAC775', borderRadius: '14px', padding: '18px 20px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#854F0B', marginBottom: '10px' }}>⚠️ Points à améliorer</p>
-            {correction.points_ameliorer?.map((p, i) => <p key={i} style={{ fontSize: '14px', color: '#633806', marginBottom: '4px' }}>• {p}</p>)}
-          </div>
-
-          {/* Erreurs */}
-          {correction.erreurs?.length > 0 && (
-            <div style={{ background: '#fff', borderRadius: '14px', padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '12px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#333', marginBottom: '12px' }}>🔍 Erreurs détectées</p>
-              {correction.erreurs.map((e, i) => (
-                <div key={i} style={{ padding: '10px 12px', background: '#f9fafb', borderRadius: '8px', marginBottom: '8px', borderLeft: '3px solid #E24B4A' }}>
-                  <div style={{ fontSize: '12px', color: '#E24B4A', fontWeight: '600', marginBottom: '4px', textTransform: 'uppercase' }}>{e.type}</div>
-                  <div style={{ fontSize: '13px', color: '#A32D2D', textDecoration: 'line-through', marginBottom: '2px' }}>{e.texte}</div>
-                  <div style={{ fontSize: '13px', color: '#0F6E56', fontWeight: '500' }}>→ {e.correction}</div>
-                </div>
+        {TACHES.map(n => (
+          <section key={n} style={{ marginBottom: 28 }}>
+            <h2 className="titre-3" style={{ marginBottom: 12 }}>
+              Tâche {n} · {NOM_TACHE[n]}
+            </h2>
+            <div className="grille grille-2">
+              {sujets.filter(s => s.numeroTache === n).map(s => (
+                <button key={s.id} className="carte carte-cliquable pile" style={{ gap: 10 }} onClick={() => { setSujetChoisi(s); setRedaction(''); setPhase('redaction'); window.scrollTo(0, 0); }}>
+                  <div className="ligne entre">
+                    <span className="etiquette">{s.minMots} à {s.maxMots} mots</span>
+                    <span className="badge" style={{ color: NIVEAU_COULEUR[s.niveau] }}>{s.niveau}</span>
+                  </div>
+                  <p className="texte-2" style={{ lineHeight: 1.6 }}>{s.sujet}</p>
+                  <span className="ligne gap-1 petit gras" style={{ color: 'var(--action)', marginTop: 'auto' }}>Choisir ce sujet <Icone nom="fleche" taille={14} /></span>
+                </button>
               ))}
             </div>
-          )}
+          </section>
+        ))}
+      </main>
+    </div>
+  );
 
-          {/* Conseil global */}
-          <div style={{ background: '#E6F1FB', border: '1px solid #B5D4F4', borderRadius: '14px', padding: '18px 20px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#185FA5', marginBottom: '8px' }}>💡 Conseil de votre professeur IA</p>
-            <p style={{ fontSize: '14px', color: '#0C447C', lineHeight: '1.7' }}>{correction.conseils}</p>
-          </div>
-
-          {/* Version corrigée */}
-          {correction.version_corrigee && (
-            <div style={{ background: '#fff', borderRadius: '14px', padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '20px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#333', marginBottom: '10px' }}>✨ Version améliorée suggérée</p>
-              <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.8', fontStyle: 'italic' }}>{correction.version_corrigee}</p>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => { setRedaction(''); setCorrection(null); setPhase('redaction'); }}
-              style={{ flex: 1, padding: '14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>
-              Réécrire
-            </button>
-            <button onClick={() => { setPhase('choix'); setRedaction(''); setCorrection(null); }}
-              style={{ flex: 1, padding: '14px', background: '#fff', border: '1px solid #ddd', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', color: '#444' }}>
-              Autre sujet
-            </button>
-            <button onClick={onRetour}
-              style={{ flex: 1, padding: '14px', background: '#fff', border: '1px solid #ddd', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', color: '#444' }}>
-              Dashboard
-            </button>
+  // ——— Rédaction ———
+  if (phase === 'redaction') return (
+    <div>
+      <EntetePage surTitre={`${sujetChoisi.tache} · Niveau ${sujetChoisi.niveau}`} titre="Rédigez votre texte" onRetour={() => setPhase('choix')} libelleRetour="Changer de sujet" />
+      <main className="conteneur chevauche" style={{ maxWidth: 820, paddingBottom: 56 }}>
+        <div className="carte" style={{ marginBottom: 16 }}>
+          <p className="etiquette" style={{ marginBottom: 8 }}>Sujet</p>
+          <p style={{ lineHeight: 1.7, marginBottom: sujetChoisi.documents ? 12 : 0 }}>{sujetChoisi.sujet}</p>
+          {sujetChoisi.documents && sujetChoisi.documents.map((d, i) => (
+            <p key={i} className="document" style={{ marginTop: 10, borderLeft: '3px solid var(--ee)' }}>{d}</p>
+          ))}
+          <div className="encadre encadre-info" style={{ marginTop: 16 }}>
+            <Icone nom="coche" taille={18} style={{ flexShrink: 0, marginTop: 2 }} />
+            <ul className="pile" style={{ gap: 2, listStyle: 'none' }}>{sujetChoisi.consignes.map((c, i) => <li key={i}>{c}</li>)}</ul>
           </div>
         </div>
-      </div>
-    );
-  }
+
+        <div className="carte" style={{ marginBottom: 16 }}>
+          <label htmlFor="redaction" className="sr-only">Votre texte</label>
+          <textarea id="redaction" className="zone-texte" value={redaction} onChange={e => setRedaction(e.target.value)} placeholder="Rédigez votre texte ici…" />
+          <div className="ligne entre gap-3" style={{ marginTop: 12 }}>
+            <span className="petit gras chiffres" style={{ color: motsTropLongs ? 'var(--erreur)' : motsSuffisants ? 'var(--succes)' : 'var(--texte-3)' }}>
+              {nbMots} mot{nbMots > 1 ? 's' : ''} / {sujetChoisi.minMots}–{sujetChoisi.maxMots}
+              {motsSuffisants && !motsTropLongs ? ' ✓' : ''}{motsTropLongs ? ' (trop long)' : ''}
+            </span>
+            <div className="progression" style={{ width: 140 }}>
+              <div style={{ width: `${Math.min((nbMots / sujetChoisi.maxMots) * 100, 100)}%`, background: motsTropLongs ? 'var(--erreur)' : motsSuffisants ? 'var(--succes)' : 'var(--ee)' }} />
+            </div>
+          </div>
+        </div>
+
+        {erreur && <div className="message-erreur" role="alert" style={{ marginBottom: 12 }}>{erreur}</div>}
+        <button className="btn btn-primaire btn-grand btn-plein" onClick={soumettre} disabled={chargement || nbMots < 20}>
+          {chargement ? 'Correction en cours…' : <><Icone nom="etincelle" taille={18} /> Faire corriger par l'IA</>}
+        </button>
+        {nbMots < 20 && <p className="centre tres-petit texte-3" style={{ marginTop: 8 }}>Écrivez au moins 20 mots pour obtenir une correction.</p>}
+      </main>
+    </div>
+  );
+
+  // ——— Correction ———
+  if (phase === 'correction' && correction) return (
+    <div>
+      <EntetePage surTitre={sujetChoisi.tache} titre="Votre correction" onRetour={onRetour} />
+      <main className="conteneur chevauche" style={{ maxWidth: 820, paddingBottom: 56 }}>
+        <CarteCorrection correction={correction} section="expression-ecrite" />
+        <div className="ligne envelopper gap-2" style={{ marginTop: 20 }}>
+          <button className="btn btn-primaire" style={{ flex: '1 1 160px' }} onClick={() => { setRedaction(''); setCorrection(null); setPhase('redaction'); }}>Réécrire ce sujet</button>
+          <button className="btn btn-contour" style={{ flex: '1 1 160px' }} onClick={() => { setPhase('choix'); setRedaction(''); setCorrection(null); }}>Autre sujet</button>
+          <button className="btn btn-contour" style={{ flex: '1 1 160px' }} onClick={onRetour}>Tableau de bord</button>
+        </div>
+      </main>
+    </div>
+  );
 
   return null;
 }
