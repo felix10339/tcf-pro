@@ -23,6 +23,11 @@ function Inscription({ onConnecte, onRetour }) {
   const soumettre = async (e) => {
     e?.preventDefault();
     setErreur('');
+    // Vérifications immédiates (le serveur vérifie de nouveau)
+    if (mode === 'inscription' && !nom.trim()) { setErreur('Indiquez votre nom.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) { setErreur('Adresse courriel invalide.'); return; }
+    if (mode === 'inscription' && motDePasse.length < 8) { setErreur('Le mot de passe doit contenir au moins 8 caractères.'); return; }
+    if (!motDePasse) { setErreur('Saisissez votre mot de passe.'); return; }
     setChargement(true);
     try {
       const url = mode === 'inscription'
@@ -30,8 +35,8 @@ function Inscription({ onConnecte, onRetour }) {
         : API_URL + '/api/auth/connexion';
 
       const body = mode === 'inscription'
-        ? { nom, email, motDePasse }
-        : { email, motDePasse };
+        ? { nom: nom.trim(), email: email.trim().toLowerCase(), motDePasse }
+        : { email: email.trim().toLowerCase(), motDePasse };
 
       const res = await axios.post(url, body);
       localStorage.setItem('token', res.data.token);
@@ -102,7 +107,10 @@ function Inscription({ onConnecte, onRetour }) {
             </div>
             <div className="champ-groupe">
               <label className="champ-label" htmlFor="mdp">Mot de passe</label>
-              <input id="mdp" className="champ" type="password" autoComplete={mode === 'connexion' ? 'current-password' : 'new-password'} value={motDePasse} onChange={e => setMotDePasse(e.target.value)} placeholder="••••••••" />
+              <input id="mdp" className="champ" type="password" autoComplete={mode === 'connexion' ? 'current-password' : 'new-password'} value={motDePasse} onChange={e => setMotDePasse(e.target.value)} placeholder={mode === 'inscription' ? '8 caractères minimum' : '••••••••'} />
+              {mode === 'inscription' && motDePasse.length > 0 && motDePasse.length < 8 && (
+                <span className="tres-petit texte-3">Encore {8 - motDePasse.length} caractère{8 - motDePasse.length > 1 ? 's' : ''}</span>
+              )}
             </div>
 
             {erreur && <div className="message-erreur" role="alert"><Icone nom="croix" taille={16} style={{ flexShrink: 0, marginTop: 2 }} />{erreur}</div>}

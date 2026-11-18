@@ -85,7 +85,7 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
   const changerMotDePasse = async (e) => {
     e?.preventDefault();
     if (!ancienMDP || !nouveauMDP) { afficher('erreur', 'Remplissez les deux champs.'); return; }
-    if (nouveauMDP.length < 6) { afficher('erreur', 'Le nouveau mot de passe doit contenir au moins 6 caractères.'); return; }
+    if (nouveauMDP.length < 8) { afficher('erreur', 'Le nouveau mot de passe doit contenir au moins 8 caractères.'); return; }
     setChargement(true);
     try {
       const token = localStorage.getItem('token');
@@ -257,7 +257,7 @@ function Profil({ utilisateur, onMisAJour, onRetour, onTarifs }) {
               </div>
               <div className="champ-groupe">
                 <label className="champ-label" htmlFor="mdp-nouveau">Nouveau mot de passe</label>
-                <input id="mdp-nouveau" className="champ" type="password" autoComplete="new-password" value={nouveauMDP} onChange={e => setNouveauMDP(e.target.value)} placeholder="6 caractères minimum" />
+                <input id="mdp-nouveau" className="champ" type="password" autoComplete="new-password" value={nouveauMDP} onChange={e => setNouveauMDP(e.target.value)} placeholder="8 caractères minimum" />
               </div>
               <button type="submit" className="btn btn-nuit btn-plein" disabled={chargement}>{chargement ? 'Modification…' : 'Changer le mot de passe'}</button>
             </form>
