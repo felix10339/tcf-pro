@@ -3,6 +3,7 @@ import axios from 'axios';
 import API_URL from '../config';
 import Logo from '../components/Logo';
 import Icone from '../components/Icone';
+import BoutonGoogle from '../components/BoutonGoogle';
 
 const ATOUTS = [
   { icone: 'cible', texte: 'Examens blancs au format officiel du TCF Canada' },
@@ -19,6 +20,22 @@ function Inscription({ onConnecte, onRetour }) {
   const [chargement, setChargement] = useState(false);
 
   const changerMode = m => { setMode(m); setErreur(''); };
+
+  const terminer = data => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('utilisateur', JSON.stringify(data.utilisateur));
+    onConnecte(data.utilisateur);
+  };
+  const messageErreur = err => !err.response
+    ? 'Impossible de joindre le serveur. Réessayez dans quelques instants.'
+    : err.response.data?.message || 'Une erreur est survenue';
+
+  const connexionGoogle = async credential => {
+    setErreur(''); setChargement(true);
+    try { terminer((await axios.post(API_URL + '/api/auth/google', { credential })).data); }
+    catch (err) { setErreur(messageErreur(err)); }
+    finally { setChargement(false); }
+  };
 
   const soumettre = async (e) => {
     e?.preventDefault();
@@ -38,17 +55,10 @@ function Inscription({ onConnecte, onRetour }) {
         ? { nom: nom.trim(), email: email.trim().toLowerCase(), motDePasse }
         : { email: email.trim().toLowerCase(), motDePasse };
 
-      const res = await axios.post(url, body);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('utilisateur', JSON.stringify(res.data.utilisateur));
-      onConnecte(res.data.utilisateur);
+      terminer((await axios.post(url, body)).data);
     } catch (err) {
-      if (!err.response) {
-        // Aucune réponse : le serveur est arrêté, l'URL est fausse, ou la connexion est coupée.
-        setErreur('Impossible de joindre le serveur. Réessayez dans quelques instants.');
-      } else {
-        setErreur(err.response.data?.message || 'Une erreur est survenue');
-      }
+      // Sans réponse : serveur arrêté, URL fausse ou connexion coupée
+      setErreur(messageErreur(err));
     } finally {
       setChargement(false);
     }
@@ -93,6 +103,8 @@ function Inscription({ onConnecte, onRetour }) {
               <button key={m} type="button" role="tab" aria-selected={mode === m} className={`segment${mode === m ? ' actif' : ''}`} onClick={() => changerMode(m)}>{label}</button>
             ))}
           </div>
+
+          <BoutonGoogle key={mode} texte={mode === 'inscription' ? 'signup_with' : 'continue_with'} onJeton={connexionGoogle} />
 
           <form onSubmit={soumettre} className="pile gap-3" noValidate>
             {mode === 'inscription' && (

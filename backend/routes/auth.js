@@ -4,7 +4,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
 const { SECRET, verifierToken } = require('../middleware/auth');
+const crypto = require('crypto');
 const { chargerUtilisateur, versPublic } = require('../services/abonnement');
+const { envoyerBienvenue } = require('../services/courriel');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
@@ -45,8 +47,48 @@ router.post('/inscription', async (req, res) => {
     return res.status(500).json({ message: 'Le compte n\'a pas pu être créé. Réessayez dans quelques instants.' });
   }
 
+  envoyerBienvenue({ email, nom }); // en arrière-plan, sans retarder la réponse
   const token = jwt.sign({ id: nouvel.id, email }, SECRET, { expiresIn: '7d' });
   res.json({ token, utilisateur: versPublic(nouvel) });
+});
+
+// Connexion / inscription avec Google : le frontend envoie le jeton d'identité (ID token) reçu de Google.
+// Le jeton est vérifié auprès de Google (signature, audience = notre identifiant client, adresse vérifiée).
+const GOOGLE_EMETTEURS = ['accounts.google.com', 'https://accounts.google.com'];
+router.post('/google', async (req, res) => {
+  const { credential } = req.body;
+  if (!process.env.GOOGLE_CLIENT_ID)
+    return res.status(503).json({ message: 'La connexion avec Google n’est pas encore activée.' });
+  if (typeof credential !== 'string' || credential.length > 4096)
+    return res.status(400).json({ message: 'Jeton Google manquant.' });
+
+  let profil;
+  try {
+    const r = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(credential));
+    profil = r.ok ? await r.json() : null;
+  } catch { profil = null; }
+  if (!profil || profil.aud !== process.env.GOOGLE_CLIENT_ID || !GOOGLE_EMETTEURS.includes(profil.iss)
+      || String(profil.email_verified) !== 'true' || +profil.exp * 1000 < Date.now())
+    return res.status(401).json({ message: 'Connexion Google refusée. Réessayez.' });
+
+  const email = normaliserEmail(profil.email);
+  const { data: existant } = await supabase.from('utilisateurs').select('id').eq('email', email).maybeSingle();
+  let id = existant?.id;
+  if (!id) {
+    const nom = (profil.name || email.split('@')[0]).trim().slice(0, 80);
+    // Mot de passe aléatoire inutilisable : le compte se connecte par Google (ou réinitialisera plus tard un mot de passe)
+    const hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+    const { data: nouvel, error } = await supabase.from('utilisateurs')
+      .insert([{ nom, email, mot_de_passe: hash }]).select('id').single();
+    if (error) {
+      console.error('Erreur création compte Google :', error.message);
+      return res.status(500).json({ message: 'Le compte n’a pas pu être créé. Réessayez dans quelques instants.' });
+    }
+    id = nouvel.id;
+    envoyerBienvenue({ email, nom });
+  }
+  const token = jwt.sign({ id, email }, SECRET, { expiresIn: '7d' });
+  res.json({ token, utilisateur: versPublic(await chargerUtilisateur(id)), nouveau: !existant });
 });
 
 router.post('/connexion', async (req, res) => {
