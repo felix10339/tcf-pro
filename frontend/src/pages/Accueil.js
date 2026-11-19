@@ -3,6 +3,7 @@ import Logo from '../components/Logo';
 import Icone from '../components/Icone';
 import { EPREUVES } from '../data/tcfCanada';
 import DemoSimulateur from '../components/DemoSimulateur';
+import PiedDePage from '../components/PiedDePage';
 import { COURRIEL, COURRIEL_LIEN, WHATSAPP_AFFICHE, WHATSAPP_LIEN } from '../data/contact';
 
 const ICONE_EPREUVE = { 'comprehension-orale': 'casque', 'comprehension-ecrite': 'livre', 'expression-ecrite': 'stylo', 'expression-orale': 'micro' };
@@ -251,20 +252,12 @@ function Accueil({ onCommencer, onConseils }) {
         </div>
       </section>
 
-      <footer style={{ background: '#081629', color: 'rgba(255,255,255,0.55)', padding: '28px 0' }}>
-        <div className="conteneur ligne entre envelopper gap-2 petit">
-          <Logo clair onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-          <div className="ligne envelopper gap-3">
-            <a href={WHATSAPP_LIEN} target="_blank" rel="noopener noreferrer" className="ligne gap-1" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>
-              <Icone nom="bulle" taille={15} /> WhatsApp
-            </a>
-            <a href={COURRIEL_LIEN} className="ligne gap-1" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>
-              <Icone nom="courriel" taille={15} /> {COURRIEL}
-            </a>
-          </div>
-          <span style={{ flexBasis: '100%' }}>© {new Date().getFullYear()} TCF Pro · Plateforme indépendante, non affiliée à France Éducation international ni à IRCC.</span>
-        </div>
-      </footer>
+      <PiedDePage
+        onAccueil={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        onEpreuves={() => allerA('epreuves')}
+        onDemo={() => allerA('demo')}
+        onConseils={rubrique => onConseils?.(rubrique)}
+        onCommencer={onCommencer} />
     </div>
   );
 }

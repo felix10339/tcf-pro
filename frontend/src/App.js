@@ -7,6 +7,8 @@ import Inscription from './pages/Inscription';
 import Dashboard from './pages/Dashboard';
 import Logo from './components/Logo';
 import Icone from './components/Icone';
+import PiedDePage from './components/PiedDePage';
+import { DOCUMENTS_LEGAUX } from './data/legal';
 
 // Pages chargées à la demande : le premier affichage ne télécharge que l'essentiel.
 const Quiz = lazy(() => import('./pages/Quiz'));
@@ -18,6 +20,7 @@ const PaiementSucces = lazy(() => import('./pages/PaiementSucces'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Profil = lazy(() => import('./pages/Profil'));
 const Conseils = lazy(() => import('./pages/Conseils'));
+const Legal = lazy(() => import('./pages/Legal'));
 
 const Chargement = () => (
   <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Chargement">
@@ -88,6 +91,12 @@ function App() {
   // Guide de conseils consultable sans compte (page publique, utile aussi pour le référencement)
   const ouvrirConseilsPublic = (rubrique = 'generale') => { setOngletConseils(rubrique); setPage('conseils'); window.scrollTo(0, 0); };
 
+  // Pages légales : accessibles directement par leur adresse, connecté ou non
+  const cheminLegal = window.location.pathname.replace(/\/+$/, '');
+  if (DOCUMENTS_LEGAUX[cheminLegal]) return (
+    <Suspense fallback={<Chargement />}><Legal chemin={cheminLegal} /></Suspense>
+  );
+
   if (page === 'accueil') return <Accueil onCommencer={() => setPage('auth')} onConseils={ouvrirConseilsPublic} />;
   if (page === 'conseils' && !utilisateur) return (
     <>
@@ -103,6 +112,7 @@ function App() {
       <Suspense fallback={<Chargement />}>
         <Conseils onRetour={() => setPage('accueil')} libelleRetour="Accueil" ongletInitial={ongletConseils} onCommencer={() => setPage('auth')} />
       </Suspense>
+      <PiedDePage onAccueil={() => setPage('accueil')} onConseils={ouvrirConseilsPublic} onCommencer={() => setPage('auth')} />
     </>
   );
   if (page === 'auth' || !utilisateur) return <Inscription onConnecte={onConnecte} onRetour={() => setPage('accueil')} />;
@@ -209,6 +219,8 @@ function App() {
               : page === 'expression-orale' ? <PagePro><ExpressionOrale onRetour={() => naviguer('app')} utilisateur={utilisateur} /></PagePro>
               : sectionActive ? <Quiz section={sectionActive} utilisateur={utilisateur} onRetourDashboard={() => setSectionActive(null)} />
               : <Dashboard utilisateur={utilisateur} onCommencerQuiz={naviguerSection} onSimulateur={() => estPro ? naviguer('simulateur') : naviguer('tarifs')} onTarifs={() => naviguer('tarifs')} onConseils={ouvrirConseils} />}
+              <PiedDePage onAccueil={() => naviguer('app')} onConseils={ouvrirConseils}
+                onEpreuves={() => (estPro ? naviguer('simulateur') : naviguer('tarifs'))} onDemo={() => naviguer('app')} onCommencer={() => naviguer('app')} />
             </>
           } />
         </Routes>
