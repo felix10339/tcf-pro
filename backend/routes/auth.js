@@ -55,9 +55,11 @@ router.post('/inscription', async (req, res) => {
 // Connexion / inscription avec Google : le frontend envoie le jeton d'identité (ID token) reçu de Google.
 // Le jeton est vérifié auprès de Google (signature, audience = notre identifiant client, adresse vérifiée).
 const GOOGLE_EMETTEURS = ['accounts.google.com', 'https://accounts.google.com'];
+// Tolère espaces, guillemets et plusieurs identifiants séparés par des virgules
+const googleClients = () => (process.env.GOOGLE_CLIENT_ID || '').split(',').map(v => v.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
 router.post('/google', async (req, res) => {
   const { credential } = req.body;
-  if (!process.env.GOOGLE_CLIENT_ID)
+  if (!googleClients().length)
     return res.status(503).json({ message: 'La connexion avec Google n’est pas encore activée.' });
   if (typeof credential !== 'string' || credential.length > 4096)
     return res.status(400).json({ message: 'Jeton Google manquant.' });
@@ -67,9 +69,15 @@ router.post('/google', async (req, res) => {
     const r = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(credential));
     profil = r.ok ? await r.json() : null;
   } catch { profil = null; }
-  if (!profil || profil.aud !== process.env.GOOGLE_CLIENT_ID || !GOOGLE_EMETTEURS.includes(profil.iss)
-      || String(profil.email_verified) !== 'true' || +profil.exp * 1000 < Date.now())
-    return res.status(401).json({ message: 'Connexion Google refusée. Réessayez.' });
+  const motif = !profil ? 'jeton invalide'
+    : !googleClients().includes(profil.aud) ? 'identifiant client différent (GOOGLE_CLIENT_ID)'
+    : !GOOGLE_EMETTEURS.includes(profil.iss) ? 'émetteur inconnu'
+    : String(profil.email_verified) !== 'true' ? 'adresse non vérifiée'
+    : +profil.exp * 1000 < Date.now() ? 'jeton expiré' : null;
+  if (motif) {
+    console.warn('Connexion Google refusée :', motif);
+    return res.status(401).json({ message: 'Connexion Google refusée. Réessayez.', motif });
+  }
 
   const email = normaliserEmail(profil.email);
   const { data: existant } = await supabase.from('utilisateurs').select('id').eq('email', email).maybeSingle();
