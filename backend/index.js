@@ -5,6 +5,7 @@ const questionsRoute = require('./routes/questions');
 const iaRoute = require('./routes/ia');
 const authRoute = require('./routes/auth');
 const paiementRoute = require('./routes/paiement');
+const devisesRoute = require('./routes/devises');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/questions', questionsRoute);
 app.use('/api/ia', iaRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/paiement', paiementRoute);
+app.use('/api/devises', devisesRoute);
 
 app.get('/', (req, res) => {
   res.json({ message: 'TCF Pro API — opérationnelle ✅' });

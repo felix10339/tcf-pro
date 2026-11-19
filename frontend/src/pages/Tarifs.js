@@ -2,11 +2,12 @@ import { useState } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
 import Icone from '../components/Icone';
+import { useDeviseLocale, DEVISES_PROPOSEES } from '../data/devises';
 
 const PLANS = [
-  { id: 'mensuel', label: 'Mensuel', prix: '9,99', periode: 'par mois', parMois: null, tag: null, economie: null },
-  { id: 'trimestriel', label: 'Trimestriel', prix: '24,99', periode: 'tous les 3 mois', parMois: '8,33', tag: 'Populaire', economie: 'Économisez 17 %' },
-  { id: 'annuel', label: 'Annuel', prix: '79,99', periode: 'par an', parMois: '6,67', tag: 'Meilleur prix', economie: 'Économisez 33 %' }
+  { id: 'mensuel', label: 'Mensuel', montant: 6.99, prix: '6,99', periode: 'par mois', parMois: null, tag: null, economie: null },
+  { id: 'trimestriel', label: 'Trimestriel', montant: 17.49, prix: '17,49', periode: 'tous les 3 mois', parMois: '5,83', tag: 'Populaire', economie: 'Économisez 17 %' },
+  { id: 'annuel', label: 'Annuel', montant: 55.99, prix: '55,99', periode: 'par an', parMois: '4,67', tag: 'Meilleur prix', economie: 'Économisez 33 %' }
 ];
 
 // Reflète ce que l'application fait réellement aujourd'hui.
@@ -31,6 +32,7 @@ function Tarifs({ utilisateur, onRetour }) {
 
   const estPro = utilisateur?.abonnement === 'pro';
   const plan = PLANS.find(p => p.id === planChoisi);
+  const { devise, setDevise, convertir, disponible } = useDeviseLocale();
 
   const redirecterVersStripe = async () => {
     setChargement(true);
@@ -79,6 +81,9 @@ function Tarifs({ utilisateur, onRetour }) {
                   <span className="chiffres" style={{ fontFamily: 'var(--police-titre)', fontSize: '2.4rem', fontWeight: 700, lineHeight: 1 }}>{p.prix} $</span>
                   <span className="petit texte-3">CAD</span>
                 </div>
+                {convertir(p.montant) && (
+                  <div className="gras" style={{ marginTop: 6, color: 'var(--action)' }}>≈ {convertir(p.montant)}</div>
+                )}
                 <div className="petit texte-3" style={{ marginTop: 4, marginBottom: 14 }}>{p.periode}{p.parMois ? ` · soit ${p.parMois} $/mois` : ''}</div>
                 <div className="ligne entre">
                   {p.economie ? <span className="badge badge-succes">{p.economie}</span> : <span />}
@@ -88,6 +93,24 @@ function Tarifs({ utilisateur, onRetour }) {
             );
           })}
         </div>
+
+        {/* Équivalent en monnaie locale */}
+        {disponible && (
+          <div className="ligne entre envelopper gap-2 petit" style={{ marginBottom: 20, padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--bordure)', borderRadius: 'var(--rayon)' }}>
+            <label htmlFor="devise" className="ligne gap-2">
+              <span className="texte-2">Afficher l'équivalent en</span>
+              <select id="devise" className="champ" style={{ width: 'auto', minHeight: 38, padding: '6px 10px' }}
+                value={devise || ''} onChange={e => setDevise(e.target.value)}>
+                <option value="">— aucun (CAD seulement)</option>
+                {devise && !DEVISES_PROPOSEES.some(([c]) => c === devise) && <option value={devise}>{devise}</option>}
+                {DEVISES_PROPOSEES.map(([code, nom]) => <option key={code} value={code}>{nom}</option>)}
+              </select>
+            </label>
+            <span className="tres-petit texte-3" style={{ maxWidth: 420 }}>
+              Vous êtes facturé en dollars canadiens. L'équivalent est indicatif : votre banque applique son propre taux et peut ajouter des frais de conversion. Taux : <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>ExchangeRate-API</a>.
+            </span>
+          </div>
+        )}
 
         {!estPro && (
           <div className="carte" style={{ marginBottom: 24, padding: 'clamp(20px, 3vw, 28px)' }}>

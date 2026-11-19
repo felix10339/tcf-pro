@@ -83,7 +83,8 @@ export const DOCUMENTS_LEGAUX = {
           'Compte : nom, adresse courriel et mot de passe. Le mot de passe est chiffré (bcrypt) : personne, y compris TCF Pro, ne peut le lire.',
           'Abonnement : forfait choisi, dates de la période en cours et identifiant client Stripe. Vos données de carte bancaire sont traitées uniquement par Stripe et ne sont jamais enregistrées par TCF Pro.',
           'Productions : les textes rédigés et les transcriptions orales que vous soumettez à la correction, avec la note et la correction obtenues.',
-          'Démonstration gratuite : l\'adresse IP est utilisée temporairement (24 heures au maximum, en mémoire) pour limiter le nombre de corrections gratuites. Elle n\'est pas enregistrée dans une base de données.'
+          'Démonstration gratuite : l\'adresse IP est utilisée temporairement (24 heures au maximum, en mémoire) pour limiter le nombre de corrections gratuites. Elle n\'est pas enregistrée dans une base de données.',
+          'Pays : notre hébergeur (Vercel) déduit votre pays de votre adresse IP pour afficher l\'équivalent des prix dans votre monnaie. Cette information n\'est pas enregistrée ; votre choix de monnaie est conservé uniquement dans votre navigateur.'
         ]
       },
       {
