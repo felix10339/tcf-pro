@@ -220,14 +220,14 @@ function Accueil({ onCommencer, onConseils }) {
       {/* ——— Fondateur ——— */}
       <section className="section" style={{ background: 'var(--surface)', borderTop: '1px solid var(--bordure)' }}>
         <div className="conteneur-etroit ligne gap-4 envelopper" style={{ justifyContent: 'center' }}>
-          <img src="/fondateur.jpeg" alt="Felix Chatue, fondateur de TCF Pro" width="160" height="192" loading="lazy" decoding="async"
-            style={{ width: 160, height: 192, objectFit: 'cover', objectPosition: 'center 15%', borderRadius: 'var(--rayon-lg)', boxShadow: 'var(--ombre-2)' }} />
+          <img src="/fondateur.webp" alt="Felix Chatue, fondateur et CEO de TCF Pro" width="192" height="256" loading="lazy" decoding="async"
+            style={{ width: 192, height: 256, objectFit: 'cover', objectPosition: 'center top', borderRadius: 'var(--rayon-lg)', boxShadow: 'var(--ombre-2)', flexShrink: 0 }} />
           <figure style={{ flex: 1, minWidth: 260 }}>
             <blockquote className="titre-2" style={{ fontWeight: 600, marginBottom: 16 }}>
               « J'ai créé TCF Pro pour que chaque candidat francophone, peu importe son pays ou son budget, arrive au TCF Canada en sachant exactement où il en est. »
             </blockquote>
             <figcaption className="petit">
-              <strong>Felix Chatue</strong> <span className="texte-3">· Fondateur de TCF Pro</span>
+              <strong>Felix Chatue</strong> <span className="texte-3">· Fondateur et CEO de TCF Pro</span>
             </figcaption>
           </figure>
         </div>
