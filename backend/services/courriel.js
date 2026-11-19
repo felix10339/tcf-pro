@@ -7,7 +7,7 @@ const nodemailer = require('nodemailer');
 
 const UTILISATEUR = (process.env.SMTP_UTILISATEUR || '').trim();
 // Les mots de passe d'application Gmail s'affichent par groupes de 4 : on retire les espaces éventuels
-const MOT_DE_PASSE = (process.env.SMTP_MOT_DE_PASSE || '').replace(/s+/g, '');
+const MOT_DE_PASSE = (process.env.SMTP_MOT_DE_PASSE || '').replace(/\s+/g, '');
 const BREVO = (process.env.BREVO_API_KEY || '').trim();
 const EXPEDITEUR = (process.env.EXPEDITEUR_EMAIL || UTILISATEUR || '').trim();
 const SITE = process.env.FRONTEND_URL || 'https://tcf-pro.vercel.app';
