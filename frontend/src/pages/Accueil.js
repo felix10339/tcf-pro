@@ -3,6 +3,7 @@ import Logo from '../components/Logo';
 import Icone from '../components/Icone';
 import { EPREUVES } from '../data/tcfCanada';
 import DemoSimulateur from '../components/DemoSimulateur';
+import { COURRIEL, COURRIEL_LIEN, WHATSAPP_AFFICHE, WHATSAPP_LIEN } from '../data/contact';
 
 const ICONE_EPREUVE = { 'comprehension-orale': 'casque', 'comprehension-ecrite': 'livre', 'expression-ecrite': 'stylo', 'expression-orale': 'micro' };
 const COULEUR_EPREUVE = { 'comprehension-orale': 'var(--co)', 'comprehension-ecrite': 'var(--ce)', 'expression-ecrite': 'var(--ee)', 'expression-orale': 'var(--eo)' };
@@ -229,6 +230,14 @@ function Accueil({ onCommencer, onConseils }) {
             <figcaption className="petit">
               <strong>Felix Chatue</strong> <span className="texte-3">· Fondateur et CEO de TCF Pro</span>
             </figcaption>
+            <div className="ligne envelopper gap-2" style={{ marginTop: 18 }}>
+              <a className="btn btn-contour btn-petit" href={WHATSAPP_LIEN} target="_blank" rel="noopener noreferrer" aria-label={`Écrire sur WhatsApp au ${WHATSAPP_AFFICHE}`}>
+                <Icone nom="bulle" taille={16} style={{ color: '#128C7E' }} /> WhatsApp · {WHATSAPP_AFFICHE}
+              </a>
+              <a className="btn btn-contour btn-petit" href={COURRIEL_LIEN} aria-label={`Écrire un courriel à ${COURRIEL}`}>
+                <Icone nom="courriel" taille={16} style={{ color: 'var(--action)' }} /> {COURRIEL}
+              </a>
+            </div>
           </figure>
         </div>
       </section>
@@ -245,7 +254,15 @@ function Accueil({ onCommencer, onConseils }) {
       <footer style={{ background: '#081629', color: 'rgba(255,255,255,0.55)', padding: '28px 0' }}>
         <div className="conteneur ligne entre envelopper gap-2 petit">
           <Logo clair onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-          <span>© {new Date().getFullYear()} TCF Pro · Plateforme indépendante, non affiliée à France Éducation international ni à IRCC.</span>
+          <div className="ligne envelopper gap-3">
+            <a href={WHATSAPP_LIEN} target="_blank" rel="noopener noreferrer" className="ligne gap-1" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>
+              <Icone nom="bulle" taille={15} /> WhatsApp
+            </a>
+            <a href={COURRIEL_LIEN} className="ligne gap-1" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>
+              <Icone nom="courriel" taille={15} /> {COURRIEL}
+            </a>
+          </div>
+          <span style={{ flexBasis: '100%' }}>© {new Date().getFullYear()} TCF Pro · Plateforme indépendante, non affiliée à France Éducation international ni à IRCC.</span>
         </div>
       </footer>
     </div>
