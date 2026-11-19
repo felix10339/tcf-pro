@@ -2,8 +2,9 @@
 // Si SMTP_UTILISATEUR / SMTP_MOT_DE_PASSE ne sont pas définis, aucun courriel n'est envoyé (l'inscription fonctionne quand même).
 const nodemailer = require('nodemailer');
 
-const UTILISATEUR = process.env.SMTP_UTILISATEUR;
-const MOT_DE_PASSE = process.env.SMTP_MOT_DE_PASSE;
+const UTILISATEUR = (process.env.SMTP_UTILISATEUR || '').trim();
+// Les mots de passe d'application Gmail s'affichent par groupes de 4 : on retire les espaces éventuels
+const MOT_DE_PASSE = (process.env.SMTP_MOT_DE_PASSE || '').replace(/s+/g, '');
 const SITE = process.env.FRONTEND_URL || 'https://tcf-pro.vercel.app';
 const WHATSAPP = 'https://wa.me/237650014045';
 
@@ -69,4 +70,12 @@ async function envoyerBienvenue({ email, nom }) {
   }
 }
 
-module.exports = { envoyerBienvenue, gabaritBienvenue };
+// Diagnostic sans divulgation : présence des variables et réponse du serveur SMTP (jamais le mot de passe)
+async function etatCourriel() {
+  const etat = { utilisateur: Boolean(UTILISATEUR), motDePasse: Boolean(MOT_DE_PASSE), longueurMotDePasse: MOT_DE_PASSE.length };
+  if (!transport) return { ...etat, connexion: 'non configuré' };
+  try { await transport.verify(); return { ...etat, connexion: 'ok' }; }
+  catch (e) { return { ...etat, connexion: 'échec', erreur: (e.response || e.message || '').slice(0, 160) }; }
+}
+
+module.exports = { envoyerBienvenue, gabaritBienvenue, etatCourriel };

@@ -6,7 +6,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { SECRET, verifierToken } = require('../middleware/auth');
 const crypto = require('crypto');
 const { chargerUtilisateur, versPublic } = require('../services/abonnement');
-const { envoyerBienvenue } = require('../services/courriel');
+const { envoyerBienvenue, etatCourriel } = require('../services/courriel');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
@@ -59,6 +59,8 @@ const GOOGLE_EMETTEURS = ['accounts.google.com', 'https://accounts.google.com'];
 const googleClients = () => (process.env.GOOGLE_CLIENT_ID || '').split(',').map(v => v.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
 // Diagnostic : l'ID client est public (il figure dans le site), on peut l'afficher pour vérifier la configuration.
 // Une valeur de type « code secret » n'est jamais renvoyée en entier.
+router.get('/courriel/etat', async (req, res) => res.json(await etatCourriel()));
+
 router.get('/google/etat', (req, res) => {
   res.json({ clients: googleClients().map(v => (/^GOCSPX-/.test(v) ? 'GOCSPX-… (code secret : mauvaise valeur)' : v)) });
 });
