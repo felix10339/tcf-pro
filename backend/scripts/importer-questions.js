@@ -1,6 +1,7 @@
 // Importe la banque de questions TCF Canada (data/questions-canada.json) dans Supabase.
 //
 //   node scripts/importer-questions.js              → aperçu seulement, rien n'est écrit
+//   node scripts/importer-questions.js --fichier=questions-images.json --ecrire → importe un autre fichier
 //   node scripts/importer-questions.js --ecrire     → ajoute les questions absentes (aucune suppression)
 //   node scripts/importer-questions.js --ecrire --remplacer
 //                                                   → SUPPRIME d'abord toutes les questions de compréhension, puis importe
@@ -9,7 +10,10 @@
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const { createClient } = require('@supabase/supabase-js');
-const nouvelles = require('../data/questions-canada.json');
+// Fichier à importer : --fichier=questions-images.json (par défaut questions-canada.json)
+const argFichier = process.argv.find(a => a.startsWith('--fichier='));
+const nomFichier = argFichier ? argFichier.split('=')[1] : 'questions-canada.json';
+const nouvelles = require(require('path').join(__dirname, '..', 'data', nomFichier));
 
 const ecrire = process.argv.includes('--ecrire');
 const remplacer = process.argv.includes('--remplacer');
@@ -44,7 +48,8 @@ async function main() {
   if (aAjouter.length) {
     const lignes = aAjouter.map(q => ({
       section: q.section, niveau: q.niveau, texte: q.texte, question: q.question,
-      options: q.options, correct: q.correct, explication: q.explication, audio_texte: q.audio_texte || null
+      options: q.options, correct: q.correct, explication: q.explication, audio_texte: q.audio_texte || null,
+      ...(q.image ? { image: q.image } : {})
     }));
     const { error: errAjout } = await supabase.from('questions').insert(lignes);
     if (errAjout) throw errAjout;

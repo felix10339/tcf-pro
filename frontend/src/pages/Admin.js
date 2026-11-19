@@ -158,6 +158,7 @@ function Admin({ onRetour }) {
                     <span className="etiquette">Question {i + 1}</span>
                     <span className="badge">ID {q.id}</span>
                   </div>
+                  {q.image && <img src={q.image} alt={q.texte} style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 8, marginBottom: 10 }} />}
                   <p className="document petit" style={{ marginBottom: 10 }}>{q.audio_texte || q.texte}</p>
                   <p className="gras" style={{ marginBottom: 10 }}>{q.question}</p>
                   <div className="pile gap-1">

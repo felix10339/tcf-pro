@@ -1,4 +1,5 @@
 import AudioPlayer from './AudioPlayer';
+import ImageDocument from './ImageDocument';
 import { NIVEAU_COULEUR } from '../data/tcfCanada';
 
 function Question({ question, onReponse, reponseSelectionnee, valide }) {
@@ -21,7 +22,13 @@ function Question({ question, onReponse, reponseSelectionnee, valide }) {
       {estOral ? (
         <div style={{ marginBottom: 18 }}>
           {question.audio_texte && question.texte && <p className="etiquette" style={{ marginBottom: 8 }}>{question.texte}</p>}
+          {question.image && <div style={{ marginBottom: 12 }}><ImageDocument src={question.image} alt="Image de la question" /></div>}
           <AudioPlayer texte={texteAudio} />
+        </div>
+      ) : question.image ? (
+        <div style={{ marginBottom: 18 }}>
+          <p className="etiquette" style={{ marginBottom: 8 }}>Document · {question.texte}</p>
+          <ImageDocument src={question.image} alt={question.texte} />
         </div>
       ) : (
         <div className="document" style={{ marginBottom: 18 }}>

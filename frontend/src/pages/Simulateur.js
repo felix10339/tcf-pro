@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import AudioPlayer from '../components/AudioPlayer';
+import ImageDocument from '../components/ImageDocument';
 import API_URL from '../config';
 import EntetePage from '../components/EntetePage';
 import Icone from '../components/Icone';
@@ -376,7 +377,13 @@ function Simulateur({ utilisateur, onRetour }) {
               {estOrale ? (
                 <div style={{ marginBottom: 16 }}>
                   {q.texte && <p className="etiquette" style={{ marginBottom: 8 }}>{q.texte}</p>}
+                  {q.image && <div style={{ marginBottom: 12 }}><ImageDocument src={q.image} alt="Image de la question" /></div>}
                   <AudioPlayer key={q.id || indexQuestion} texte={q.audio_texte || q.texte} />
+                </div>
+              ) : q.image ? (
+                <div style={{ marginBottom: 16 }}>
+                  <p className="etiquette" style={{ marginBottom: 8 }}>Document · {q.texte}</p>
+                  <ImageDocument key={q.id || indexQuestion} src={q.image} alt={q.texte} />
                 </div>
               ) : (
                 <div className="document" style={{ marginBottom: 16 }}>{q.texte}</div>
