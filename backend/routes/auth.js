@@ -57,6 +57,12 @@ router.post('/inscription', async (req, res) => {
 const GOOGLE_EMETTEURS = ['accounts.google.com', 'https://accounts.google.com'];
 // Tolère espaces, guillemets et plusieurs identifiants séparés par des virgules
 const googleClients = () => (process.env.GOOGLE_CLIENT_ID || '').split(',').map(v => v.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+// Diagnostic : l'ID client est public (il figure dans le site), on peut l'afficher pour vérifier la configuration.
+// Une valeur de type « code secret » n'est jamais renvoyée en entier.
+router.get('/google/etat', (req, res) => {
+  res.json({ clients: googleClients().map(v => (/^GOCSPX-/.test(v) ? 'GOCSPX-… (code secret : mauvaise valeur)' : v)) });
+});
+
 router.post('/google', async (req, res) => {
   const { credential } = req.body;
   if (!googleClients().length)
