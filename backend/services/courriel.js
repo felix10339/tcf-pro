@@ -1,10 +1,15 @@
-// Envoi des courriels transactionnels (bienvenue) par SMTP — Gmail avec un « mot de passe d'application » par défaut.
-// Si SMTP_UTILISATEUR / SMTP_MOT_DE_PASSE ne sont pas définis, aucun courriel n'est envoyé (l'inscription fonctionne quand même).
+// Envoi des courriels transactionnels (bienvenue).
+// 1) BREVO_API_KEY défini : API HTTPS de Brevo (fonctionne sur Railway, qui bloque le SMTP sortant hors forfait Pro).
+//    L'expéditeur EXPEDITEUR_EMAIL doit être validé dans Brevo (Expéditeurs et IP).
+// 2) Sinon SMTP (SMTP_UTILISATEUR / SMTP_MOT_DE_PASSE), utile en local.
+// Sans configuration, aucun courriel n'est envoyé (l'inscription fonctionne quand même).
 const nodemailer = require('nodemailer');
 
 const UTILISATEUR = (process.env.SMTP_UTILISATEUR || '').trim();
 // Les mots de passe d'application Gmail s'affichent par groupes de 4 : on retire les espaces éventuels
 const MOT_DE_PASSE = (process.env.SMTP_MOT_DE_PASSE || '').replace(/s+/g, '');
+const BREVO = (process.env.BREVO_API_KEY || '').trim();
+const EXPEDITEUR = (process.env.EXPEDITEUR_EMAIL || UTILISATEUR || '').trim();
 const SITE = process.env.FRONTEND_URL || 'https://tcf-pro.vercel.app';
 const WHATSAPP = 'https://wa.me/237650014045';
 
@@ -54,17 +59,28 @@ function gabaritBienvenue(nom) {
 }
 
 // N'interrompt jamais l'inscription : les erreurs sont seulement journalisées.
+const SUJET = 'Bienvenue sur TCF Pro 🇨🇦 — votre préparation commence ici';
+
+async function envoyerBrevo({ a, nom, sujet, html, texte }) {
+  const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'api-key': BREVO, 'Content-Type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      sender: { name: 'TCF Pro', email: EXPEDITEUR },
+      to: [{ email: a, ...(nom ? { name: nom } : {}) }],
+      replyTo: { email: EXPEDITEUR, name: 'TCF Pro' },
+      subject: sujet, htmlContent: html, textContent: texte
+    })
+  });
+  if (!r.ok) throw new Error(`Brevo ${r.status} : ${(await r.text()).slice(0, 160)}`);
+}
+
 async function envoyerBienvenue({ email, nom }) {
-  if (!transport) return;
+  if (!(BREVO && EXPEDITEUR) && !transport) return;
   try {
     const { html, texte } = gabaritBienvenue(nom);
-    await transport.sendMail({
-      from: `"TCF Pro" <${UTILISATEUR}>`,
-      to: email,
-      subject: 'Bienvenue sur TCF Pro 🇨🇦 — votre préparation commence ici',
-      text: texte,
-      html
-    });
+    if (BREVO && EXPEDITEUR) await envoyerBrevo({ a: email, nom, sujet: SUJET, html, texte });
+    else await transport.sendMail({ from: `"TCF Pro" <${UTILISATEUR}>`, to: email, subject: SUJET, text: texte, html });
   } catch (e) {
     console.error('Courriel de bienvenue non envoyé :', e.message);
   }
@@ -72,7 +88,16 @@ async function envoyerBienvenue({ email, nom }) {
 
 // Diagnostic sans divulgation : présence des variables et réponse du serveur SMTP (jamais le mot de passe)
 async function etatCourriel() {
-  const etat = { utilisateur: Boolean(UTILISATEUR), motDePasse: Boolean(MOT_DE_PASSE), longueurMotDePasse: MOT_DE_PASSE.length };
+  if (BREVO) {
+    const etat = { methode: 'brevo', expediteur: Boolean(EXPEDITEUR) };
+    try {
+      const r = await fetch('https://api.brevo.com/v3/senders', { headers: { 'api-key': BREVO, accept: 'application/json' } });
+      if (!r.ok) return { ...etat, connexion: 'échec', erreur: `clé refusée (${r.status})` };
+      const exp = ((await r.json()).senders || []).find(x => x.email?.toLowerCase() === EXPEDITEUR.toLowerCase());
+      return { ...etat, connexion: 'ok', expediteurValide: Boolean(exp?.active) };
+    } catch (e) { return { ...etat, connexion: 'échec', erreur: e.message.slice(0, 160) }; }
+  }
+  const etat = { methode: 'smtp', utilisateur: Boolean(UTILISATEUR), motDePasse: Boolean(MOT_DE_PASSE), longueurMotDePasse: MOT_DE_PASSE.length };
   if (!transport) return { ...etat, connexion: 'non configuré' };
   try { await transport.verify(); return { ...etat, connexion: 'ok' }; }
   catch (e) { return { ...etat, connexion: 'échec', erreur: (e.response || e.message || '').slice(0, 160) }; }
