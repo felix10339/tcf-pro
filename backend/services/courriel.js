@@ -10,7 +10,7 @@ const UTILISATEUR = (process.env.SMTP_UTILISATEUR || '').trim();
 const MOT_DE_PASSE = (process.env.SMTP_MOT_DE_PASSE || '').replace(/\s+/g, '');
 const BREVO = (process.env.BREVO_API_KEY || '').trim();
 const EXPEDITEUR = (process.env.EXPEDITEUR_EMAIL || UTILISATEUR || '').trim();
-const SITE = process.env.FRONTEND_URL || 'https://tcf-pro.vercel.app';
+const SITE = process.env.FRONTEND_URL || 'https://www.tcf-pro.ca';
 const WHATSAPP = 'https://wa.me/237650014045';
 
 const transport = UTILISATEUR && MOT_DE_PASSE
